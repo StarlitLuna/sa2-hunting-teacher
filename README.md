@@ -1,10 +1,10 @@
-# SA2 Hunting Teacher
+﻿# SA2 Hunting Teacher
 
 This project aims to help new SA2 runners learn hunting pieces efficiently.
 
 ## Description
 
-Normally new runners to SA2 face a daunting task for learning all of the emerald pieces in the game reuquired to effectively run either of the 2 main story modes that make up the 2 most popular categories.
+Normally new runners to SA2 face a daunting task for learning all of the emerald pieces in the game required to effectively run either of the 2 main story modes that make up the 2 most popular categories.
 This processes generally involves spending countless hours grinding each individual hunting stage over and over until the player feels as though they've learned all of the possible pieces in that stage and there truly are no shortcuts.
 Even then it's possible (and indeed very common) that one or two very rare pieces could have slipped through the cracks of this process.
 So I developed this project to aid new players in learning their pieces by playing through a curated list of sets that guarantees the player will not only see every single possible piece in the stage, but also that they will do so as efficiently as possible
@@ -56,6 +56,27 @@ It's necessary to actually touch the third piece and trigger a win condition to 
 Once a sequence is complete the tool will automatically reset itself to allow you to train in other levels.
 You can also break out of a sequence early at any time by pressing the reset button.
 
+#### Mad Space
+
+Mad Space is a unique level in that the first hint of every piece (the only hint we care about) is reversed making just reading the hint itself
+harder than it really needs to be in a stage that already presents other gimmicks and challenges. For that reason, this tool also provides
+a setting that allows you to correct the order of the letters in each the first hint so that it is readable from left to right like normal.
+This feature is supported across all languages, and is turned on by default. Actually, I should say that the hint reversal making it harder to read
+is turned off by default.
+
+When Mad Space is selected as the stage for learning in the level select drop down, a check box will appear asking if
+you want to allow reversed hints. Leaving this off as it is by default will fix the hint text to make it readable. Turning it on will leave the hints
+in their reversed ordering.
+
+Whether you think learning the pieces by reading their hints ordered correctly and then practicing with the reversed words later will be
+more beneficial or learning as the hints would actually appear in a real run from the start and not looking at standardized words at all
+is more beneficial is entirely left up to the player to decide. Everyone is different and I'm aware of some people preferring one method
+while others would prefer the other method. Give it a try for yourself and see which you prefer!
+
 ## License
 
 This project is licensed under the [GPL v3.0] License - see the LICENSE file for details
+
+## Attributions
+
+Finally, a special thanks to [Zeitthh](https://www.speedrun.com/users/Zeitthh) for helping me create the learning sets for all the levels 💜
