@@ -32,6 +32,7 @@ partial class HuntingTeacherForm
 		components = new System.ComponentModel.Container();
 		System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(HuntingTeacherForm));
 		panel1 = new Panel();
+		inPlaceRepititions = new CheckBox();
 		label3 = new Label();
 		backToMenu = new CheckBox();
 		mspReverseHints = new CheckBox();
@@ -45,6 +46,7 @@ partial class HuntingTeacherForm
 		logBox = new TextBox();
 		reversedHintsTooltip = new ToolTip(components);
 		backToMenuTooltip = new ToolTip(components);
+		inPlaceRepititionsTooltip = new ToolTip(components);
 		panel1.SuspendLayout();
 		((System.ComponentModel.ISupportInitialize)repetitions).BeginInit();
 		panel2.SuspendLayout();
@@ -52,6 +54,7 @@ partial class HuntingTeacherForm
 		// 
 		// panel1
 		// 
+		panel1.Controls.Add(inPlaceRepititions);
 		panel1.Controls.Add(label3);
 		panel1.Controls.Add(backToMenu);
 		panel1.Controls.Add(mspReverseHints);
@@ -67,6 +70,17 @@ partial class HuntingTeacherForm
 		panel1.Size = new Size(827, 80);
 		panel1.TabIndex = 0;
 		// 
+		// inPlaceRepititions
+		// 
+		inPlaceRepititions.AutoSize = true;
+		inPlaceRepititions.Location = new Point(369, 50);
+		inPlaceRepititions.Name = "inPlaceRepititions";
+		inPlaceRepititions.Size = new Size(157, 24);
+		inPlaceRepititions.TabIndex = 9;
+		inPlaceRepititions.Text = "Repititions In Place";
+		inPlaceRepititions.UseVisualStyleBackColor = true;
+		inPlaceRepititions.CheckedChanged += SettingsChanged;
+		// 
 		// label3
 		// 
 		label3.AutoSize = true;
@@ -79,13 +93,13 @@ partial class HuntingTeacherForm
 		// backToMenu
 		// 
 		backToMenu.AutoSize = true;
-		backToMenu.Location = new Point(249, 50);
+		backToMenu.Location = new Point(240, 50);
 		backToMenu.Name = "backToMenu";
 		backToMenu.Size = new Size(123, 24);
 		backToMenu.TabIndex = 7;
 		backToMenu.Text = "Back To Menu";
 		backToMenu.UseVisualStyleBackColor = true;
-		backToMenu.CheckedChanged += Settings_CheckedChanged;
+		backToMenu.CheckedChanged += SettingsChanged;
 		// 
 		// mspReverseHints
 		// 
@@ -96,7 +110,7 @@ partial class HuntingTeacherForm
 		mspReverseHints.TabIndex = 6;
 		mspReverseHints.Text = "Reversed Hints";
 		mspReverseHints.UseVisualStyleBackColor = true;
-		mspReverseHints.CheckedChanged += Settings_CheckedChanged;
+		mspReverseHints.CheckedChanged += SettingsChanged;
 		// 
 		// label2
 		// 
@@ -118,6 +132,7 @@ partial class HuntingTeacherForm
 		repetitions.Size = new Size(43, 27);
 		repetitions.TabIndex = 4;
 		repetitions.Value = new decimal(new int[] { 3, 0, 0, 0 });
+		repetitions.ValueChanged += SettingsChanged;
 		// 
 		// resetBtn
 		// 
@@ -218,4 +233,6 @@ partial class HuntingTeacherForm
 	private CheckBox backToMenu;
 	private ToolTip reversedHintsTooltip;
 	private ToolTip backToMenuTooltip;
+	private CheckBox inPlaceRepititions;
+	private ToolTip inPlaceRepititionsTooltip;
 }

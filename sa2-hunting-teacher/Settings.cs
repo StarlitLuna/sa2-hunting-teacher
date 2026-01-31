@@ -10,7 +10,28 @@ internal class Settings {
 	/// Defaults to <c>false</c>.
 	/// </summary>
 	public bool MspReversedHints { get; set; } = false;
+
+	/// <summary>
+	/// Whether or not you will go back to the stage select menu after completing a set.
+	/// When true (i.e. checked), you will return to stage select after collecting the third piece.
+	/// When false (i.e. not checked), you will respawn and get your next set without exiting the level.
+	/// Defaults to <c>false</c>.
+	/// </summary>
 	public bool BackToMenu { get; set; } = false;
+
+	/// <summary>
+	/// Whether or not repititions happen at the end of a sequence or in place per set.
+	/// When true (i.e. checked), you will play the same set x times before proceeding to the next set.
+	/// When false (i.e. not checked), you will play one set at a time and the sequence itself will repeat x times.
+	/// Defaults to <c>false</c>.
+	/// </summary>
+	public bool RepititionsInPlace { get; set; } = false;
+
+	/// <summary>
+	/// The number of repititions to play in a sequence.
+	/// Defaults to <c>3</c>.
+	/// </summary>
+	public int Repititions { get; set; } = 3;
 
 	public static readonly string AppDataPath = Path.Combine(
 		System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData),

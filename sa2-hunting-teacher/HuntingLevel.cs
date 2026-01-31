@@ -23,6 +23,8 @@ public abstract class HuntingLevel(SA2Manager manager, byte repetitions) {
 
 	protected byte Repetitions { get; } = repetitions;
 
+	protected byte Repitition { get; set; } = 0;
+
 	public bool SequenceComplete() {
 		return SequenceCount >= this.Sequence.Length * this.Repetitions;
 	}
@@ -42,12 +44,22 @@ public abstract class HuntingLevel(SA2Manager manager, byte repetitions) {
 				this.Sequence[Next],
 				this.Next + 1,
 				this.Sequence.Length,
-				(int)Math.Ceiling((double)(this.SequenceCount + 1) / (double)this.Sequence.Length)
+				!this.Manager.RepititionsInPlace()
+					? (int)Math.Ceiling((double)(this.SequenceCount + 1) / (double)this.Sequence.Length)
+					: (this.Repitition + 1)
 			);
 		}
 	}
 
 	private int NextSequence() {
-		return this.Next + 1 >= this.Sequence.Length ? 0 : this.Next + 1;
+        if (this.Manager.RepititionsInPlace()) {
+            if (++this.Repitition < this.Repetitions) {
+				return this.Next;
+			}
+
+			this.Repitition = 0;
+        }
+
+        return this.Next + 1 >= this.Sequence.Length ? 0 : this.Next + 1;
 	}
 }

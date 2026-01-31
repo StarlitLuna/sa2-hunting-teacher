@@ -22,9 +22,9 @@ public partial class HuntingTeacherForm : Form {
 		{ Level.MeteorHerd, ("Meteor Herd", "Knuckles") },
 		/** Rouge */
 		{ Level.DryLagoon, ("Dry Lagoon", "Rouge") },
-		// { Level.EggQuarters, ("Egg Quarters", "Rouge") },
+		{ Level.EggQuarters, ("Egg Quarters", "Rouge") },
 		{ Level.SecurityHall, ("Security Hall", "Rouge") },
-		// { Level.MadSpace, ("Mad Space", "Rouge") },
+		{ Level.MadSpace, ("Mad Space", "Rouge") },
 	};
 
 	public HuntingTeacherForm() {
@@ -53,6 +53,8 @@ public partial class HuntingTeacherForm : Form {
 	private void InitializeSettings() {
 		this.mspReverseHints.Checked = this.settings.MspReversedHints;
 		this.backToMenu.Checked = this.settings.BackToMenu;
+		this.inPlaceRepititions.Checked = this.settings.RepititionsInPlace;
+		this.repetitions.Value = this.settings.Repititions;
 	}
 
 	private void InitializeTooltips() {
@@ -67,11 +69,19 @@ public partial class HuntingTeacherForm : Form {
 			"When enabled, you will go back to stage select after collecting your last piece\n" +
 			"When disabled, you will instantly respawn to your next set without having to go back to stage select"
 		);
+
+		this.inPlaceRepititionsTooltip.SetToolTip(
+			this.inPlaceRepititions,
+			"When enabled, you will play a set a 'repitition' number of times before proceeding to the next set\n" +
+			"When disabled, you will play a set once, proceed to the next set, then the sequence will repeat a 'repitition' number of times"
+		);
 	}
 
 	private void SaveSettings() {
 		this.settings.MspReversedHints = this.mspReverseHints.Checked;
 		this.settings.BackToMenu = this.backToMenu.Checked;
+		this.settings.RepititionsInPlace = this.inPlaceRepititions.Checked;
+		this.settings.Repititions = (byte)this.repetitions.Value;
 		this.settings.Save();
 	}
 
@@ -90,6 +100,10 @@ public partial class HuntingTeacherForm : Form {
 		return this.backToMenu.Checked;
 	}
 
+	public bool RepititionsInPlace() {
+		return this.inPlaceRepititions.Checked;
+	}
+
 	private void StartBtn_Click(object sender, EventArgs e) {
 		Level selectedLevel = (Level)this.levelSelector.SelectedValue!;
 		this.startBtn.Enabled = false;
@@ -99,7 +113,7 @@ public partial class HuntingTeacherForm : Form {
 
 		Task.Run(() => {
 			try {
-				SA2Manager.Start(selectedLevel, (byte)repetitions.Value, this);
+				SA2Manager.Start(selectedLevel, (byte)this.repetitions.Value, this, this.inPlaceRepititions.Checked);
 			} catch (ArgumentException) {
 				this.Invoke(() => {
 					MessageBox.Show(this, "A running instance of SA2 could not be found.\n" +
@@ -127,7 +141,7 @@ public partial class HuntingTeacherForm : Form {
 		this.mspReverseHints.Enabled = this.ShouldEnableMspReverseHints();
 	}
 
-	private void Settings_CheckedChanged(object sender, EventArgs e) {
+	private void SettingsChanged(object sender, EventArgs e) {
 		this.SaveSettings();
 	}
 }

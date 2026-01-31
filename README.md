@@ -53,6 +53,11 @@ The tool will also ensure that your set does NOT change if you die or restart th
 Exiting the stage will also not progress the sequence so you get the same set you were already on until you collect all 3 pieces and "win" the level.
 It's necessary to actually touch the third piece and trigger a win condition to progress the sequence.
 
+When you configure your repitions the default behavior is that you will play through all sets once before you go back to the first set and then it repeats.
+The sequence completes when you repeat all sets the number of repititions you configure. Additionally, there is a setting that changes the behavior of repititions.
+When enabled, each set will repeat the number of repititions you configure before you move on to the next set. The sequence completes when you see the last set and play it
+the number of repititions you have configured. This option is to help re-enforce your learning in which ever way you feel would be more condusive towards memorizing the information.
+
 Once a sequence is complete the tool will automatically reset itself to allow you to train in other levels.
 You can also break out of a sequence early at any time by pressing the reset button.
 

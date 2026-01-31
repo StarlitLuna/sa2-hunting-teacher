@@ -18,9 +18,10 @@ public partial class SA2Manager : IDisposable {
 	private readonly HuntingLevel level;
 	private readonly HuntingTeacherForm teacherForm;
 	private readonly MemoryMappedViewAccessor sharedMemory;
+	private readonly bool repititionsInPlace;
 	private HunterTeacherData HunterTeacherData;
 
-	private SA2Manager(Level selection, byte repetitions, HuntingTeacherForm teacherForm) {
+	private SA2Manager(Level selection, byte repetitions, HuntingTeacherForm teacherForm, bool repititionsInPlace) {
 		this.teacherForm = teacherForm;
 		this.level = selection switch {
 			Level.WildCanyon => new WildCanyon(this, repetitions),
@@ -61,6 +62,7 @@ public partial class SA2Manager : IDisposable {
 			MemoryMappedFileAccess.ReadWrite
 		);
 
+		this.repititionsInPlace = repititionsInPlace;
 		this.sharedMemory = SA2Manager.MemoryMapper.CreateViewAccessor();
 		this.ApplyDataDefaults(this.level.LevelId, teacherForm.MspReversedHints(), teacherForm.BackToMenu());
 		this.InjectDll();
@@ -100,6 +102,10 @@ public partial class SA2Manager : IDisposable {
 		}
 
 		return false;
+	}
+
+	public bool RepititionsInPlace() {
+		return this.repititionsInPlace;
 	}
 
 	public void LogMessage(string msg) {
@@ -172,10 +178,10 @@ public partial class SA2Manager : IDisposable {
 		this.CloseResource();
 	}
 
-	public static void Start(Level selection, byte repetitions, HuntingTeacherForm teacherForm) {
+	public static void Start(Level selection, byte repetitions, HuntingTeacherForm teacherForm, bool repititionsInPlace) {
 		SA2Manager.CanRun = true;
 		 
-		using (SA2Manager instance = new(selection, repetitions, teacherForm)) {
+		using (SA2Manager instance = new(selection, repetitions, teacherForm, repititionsInPlace)) {
 			while (SA2Manager.CanRun && !instance.level.SequenceComplete() && !instance.targetProcess.HasExited) {
 				instance.sharedMemory.Read(0, out instance.HunterTeacherData);
 				instance.level.RunSequence();
