@@ -29,64 +29,44 @@ public class UpdateManager {
 	}
 
 	private async Task RunUpdateCheck() {
-		string latestVersion = "";
+		Release? release = null;
 
 		try {
-			HttpResponseMessage res = await this.client.GetAsync(UpdateManager.API_URL + $"/tags");
+			HttpResponseMessage res = await this.client.GetAsync(UpdateManager.API_URL + $"/releases/latest");
 			res.EnsureSuccessStatusCode();
-			Tag[] tags = Tag.FromJson(await res.Content.ReadAsStringAsync());
-			if (tags.Length == 0) {
-				return;
-			}
+			release = Release.FromJson(await res.Content.ReadAsStringAsync());
+		} catch (Exception) {
+			return;
+		}
 
-			latestVersion = tags[0].Name;
-            } catch (Exception) {
+		if (release == null) {
 			return;
 		}
 
 		string currentVersion = "v" + Application.ProductVersion;
-		if (currentVersion.Equals(latestVersion)) {
+		if (currentVersion.Equals(release.TagName)) {
 			return;
 		}
 
-		this.latestTag = latestVersion;
+		this.latestTag = release.TagName;
 		this.mainForm.Invoke(() => {
-			UpdateForm updateForm = new(this, latestVersion);
+			UpdateForm updateForm = new(this, release);
 			updateForm.ShowDialog(this.mainForm);
 		});
 	}
 
-	public async Task PerformUpdate(UpdateForm updateForm) {
+	public async Task PerformUpdate(UpdateForm updateForm, Release release) {
 		if (this.latestTag == null) {
 			return;
 		}
 
 		ReleaseAsset? newVersion = null;
-
-		try {
-			HttpResponseMessage res = await this.client.GetAsync(UpdateManager.API_URL + $"/releases/tags/{this.latestTag}");
-			res.EnsureSuccessStatusCode();
-
-			Release release = Release.FromJson(await res.Content.ReadAsStringAsync());
-			ReleaseAsset[] assets = release.Assets;
-			foreach (ReleaseAsset asset in assets) {
-				if (asset.Name.Equals(UpdateManager.ASSET_NAME)) {
-					newVersion = asset;
-					break;
-				}
+		ReleaseAsset[] assets = release.Assets;
+		foreach (ReleaseAsset asset in assets) {
+			if (asset.Name.Equals(UpdateManager.ASSET_NAME)) {
+				newVersion = asset;
+				break;
 			}
-		} catch (Exception) {
-			updateForm.Invoke(() => {
-				MessageBox.Show(
-					updateForm,
-					"There was an error while trying to lookup the update details.\n" +
-						"Please try again later.", "Download Error",
-					MessageBoxButtons.OK,
-					MessageBoxIcon.Error
-				);
-			});
-
-			return;
 		}
 
 		if (newVersion == null) {

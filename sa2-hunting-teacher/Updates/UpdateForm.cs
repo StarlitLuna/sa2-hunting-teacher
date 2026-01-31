@@ -1,12 +1,14 @@
 ﻿namespace sa2_hunting_teacher.Updates {
 	public partial class UpdateForm : Form {
 		private UpdateManager updateManager;
+		private Release release;
 
-		public UpdateForm(UpdateManager updateManager, string version) {
+		public UpdateForm(UpdateManager updateManager, Release release) {
 			InitializeComponent();
 
 			this.updateManager = updateManager;
-			this.infoLabel1.Text += version;
+			this.release = release;
+			this.infoLabel1.Text += release.TagName;
 			this.infoLabel1.Location = new Point(18 + this.infoLabel1.Location.X + SystemIcons.Information.Width, this.infoLabel1.Location.Y);
 			this.infoLabel2.Location = new Point(18 + this.infoLabel2.Location.X + SystemIcons.Information.Width, this.infoLabel2.Location.Y);
 		}
@@ -22,7 +24,7 @@
 			this.spinnerIcon.Visible = true;
 
 			Task.Run(async () => {
-				await this.updateManager.PerformUpdate(this);
+				await this.updateManager.PerformUpdate(this, this.release);
 				this.Invoke(this.Close);
 			});
 		}
