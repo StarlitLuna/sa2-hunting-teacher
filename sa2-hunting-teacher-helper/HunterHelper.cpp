@@ -37,7 +37,6 @@ void HunterHelper::HookActiveWindow() {
 	}
 
 	HunterHelper::OldWndProc = (WNDPROC)SetWindowLong(param.hwnd, GWLP_WNDPROC, (LONG_PTR)HunterHelper::WndProc);
-	std::wstring t = L"Wind Proc: " + std::to_wstring((int)HunterHelper::OldWndProc);
 }
 
 BOOL CALLBACK HunterHelper::EnumWindowsProc(HWND hwnd, LPARAM lParam) {
