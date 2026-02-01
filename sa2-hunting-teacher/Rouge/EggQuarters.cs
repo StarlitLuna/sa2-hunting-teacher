@@ -108,7 +108,7 @@ public class EggQuarters(SA2Manager manager, byte repetitions) : HuntingLevel(ma
 		{ Set.EnumKey(P2Id.SleepingUnderCoffin), "Sleeping under a coffin." },
 		{ Set.EnumKey(P2Id.TwoSmeltingFurnaces), "Two smelting furnaces." },
 		{ Set.EnumKey(P2Id.SixWhiteEggs), "Six white eggs." },
-		{ Set.EnumKey(P2Id.UnderTheBellyImpossible), "Under the belly." },
+		// { Set.EnumKey(P2Id.UnderTheBellyImpossible), "Under the belly." },
 		{ Set.EnumKey(P2Id.TwoBeautifulWomenWithFishFaces), "Two beautiful women with fish faces." },
 		{ Set.EnumKey(P2Id.UnderTheTreasure), "Under the treasure." },
 		{ Set.EnumKey(P2Id.FlamesFacingEachOther), "Flames facing each other." },
