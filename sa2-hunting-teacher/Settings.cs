@@ -20,6 +20,14 @@ internal class Settings {
 	public bool BackToMenu { get; set; } = false;
 
 	/// <summary>
+	/// Whether or not the in-game timer will reset to 0 after you collect your third piece. Does nothing if Back To Menu is on.
+	/// When true (i.e. checked), the in game timer will reset after you collect your third piece in a set.
+	/// When false (i.e. not checked), the in game timer will keep going through set changes.
+	/// Defaults to <c>true</c>.
+	/// </summary>
+	public bool TimerReset { get; set; } = true;
+
+	/// <summary>
 	/// Whether or not repititions happen at the end of a sequence or in place per set.
 	/// When true (i.e. checked), you will play the same set x times before proceeding to the next set.
 	/// When false (i.e. not checked), you will play one set at a time and the sequence itself will repeat x times.

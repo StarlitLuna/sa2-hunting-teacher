@@ -53,6 +53,7 @@ public partial class HuntingTeacherForm : Form {
 	private void InitializeSettings() {
 		this.mspReverseHints.Checked = this.settings.MspReversedHints;
 		this.backToMenu.Checked = this.settings.BackToMenu;
+		this.timerReset.Checked = this.settings.TimerReset;
 		this.inPlaceRepititions.Checked = this.settings.RepititionsInPlace;
 		this.repetitions.Value = this.settings.Repititions;
 	}
@@ -70,6 +71,13 @@ public partial class HuntingTeacherForm : Form {
 			"When disabled, you will instantly respawn to your next set without having to go back to stage select"
 		);
 
+		this.timerResetTooltip.SetToolTip(
+			this.timerReset,
+			"When enabled, the in-game timer will reset inbetween sets after you collect your third piece\n" +
+			"When disabled, the in-game timer will continue counting inbetween sets\n" +
+			"This setting does nothing when 'Back To Menu' is enabled"
+		);
+
 		this.inPlaceRepititionsTooltip.SetToolTip(
 			this.inPlaceRepititions,
 			"When enabled, you will play a set a 'repitition' number of times before proceeding to the next set\n" +
@@ -80,6 +88,7 @@ public partial class HuntingTeacherForm : Form {
 	private void SaveSettings() {
 		this.settings.MspReversedHints = this.mspReverseHints.Checked;
 		this.settings.BackToMenu = this.backToMenu.Checked;
+		this.settings.TimerReset = this.timerReset.Checked;
 		this.settings.RepititionsInPlace = this.inPlaceRepititions.Checked;
 		this.settings.Repititions = (byte)this.repetitions.Value;
 		this.settings.Save();
@@ -100,6 +109,10 @@ public partial class HuntingTeacherForm : Form {
 		return this.backToMenu.Checked;
 	}
 
+	public bool TimerReset() {
+		return this.timerReset.Checked;
+	}
+
 	public bool RepititionsInPlace() {
 		return this.inPlaceRepititions.Checked;
 	}
@@ -109,6 +122,9 @@ public partial class HuntingTeacherForm : Form {
 		this.startBtn.Enabled = false;
 		this.repetitions.Enabled = false;
 		this.mspReverseHints.Enabled = false;
+		this.backToMenu.Enabled = false;
+		this.timerReset.Enabled = false;
+		this.inPlaceRepititions.Enabled = false;
 		this.resetBtn.Enabled = true;
 
 		Task.Run(() => {
@@ -130,6 +146,9 @@ public partial class HuntingTeacherForm : Form {
 		this.resetBtn.Enabled = false;
 		this.repetitions.Enabled = true;
 		this.mspReverseHints.Enabled = this.ShouldEnableMspReverseHints();
+		this.backToMenu.Enabled = true;
+		this.timerReset.Enabled = true;
+		this.inPlaceRepititions.Enabled = true;
 		this.startBtn.Enabled = true;
 	}
 

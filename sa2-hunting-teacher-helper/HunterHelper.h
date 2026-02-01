@@ -8,6 +8,7 @@ struct HunterTeacherData {
 	bool levelLoading;
 	bool mspReversedHints;
 	bool backToMenu;
+	bool timerReset;
 	int p1Id;
 	int p2Id;
 	int p3Id;
@@ -25,6 +26,15 @@ DataArray(__int16, Life_Count, 0x174B024, 2);
 DataArray(CharObj2Base*, MainCharObj2, 0x1DE9600, 8);
 DataPointer(EmeraldManager*, EmeraldManagerObj, 0x1AF014C);
 DataPointer(__int16, GameState, 0x1934BE0);
+
+DataPointer(char, TimerMinutes, 0x174AFDB);
+DataPointer(char, TimerSeconds, 0x174AFDC);
+DataPointer(char, TimerFrames, 0x174AFDD);
+DataPointer(char, TimerMinutesContinue, 0x1934B8C);
+DataPointer(char, TimerSecondsContinue, 0x1934B8D);
+DataPointer(char, TimerFramesContinue, 0x1934B8E);
+DataPointer(int, InGameFrameCount, 0x174B03C);
+DataPointer(char, StopTimer, 0x174AFDA);
 
 static const uint8_t NEW_LINE = 0x0C;
 static const uint8_t CENTER_COMMAND = 0x07;

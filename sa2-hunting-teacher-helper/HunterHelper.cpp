@@ -86,12 +86,25 @@ void HunterHelper::AwardWin(signed int* player) {
 		return;
 	}
 
+	StopTimer = 1;
 	EmeraldManagerObj->Action = 4;
 	EmeraldManagerObj->EmeraldsSpawned = 0;
 	EmeraldManagerObj->Piece1.id = 0xFF;
 	EmeraldManagerObj->Piece2.id = 0xFF;
 	EmeraldManagerObj->Piece3.id = 0xFF;
 	GameState = HunterHelper::TeacherDataState->backToMenu ? GameStates_ReturnToMenu_1 : GameStates_RestartLevel_NoLifeLost;
+
+	if (!HunterHelper::TeacherDataState->backToMenu) {
+		InGameFrameCount = 0;
+		if (HunterHelper::TeacherDataState->timerReset) {
+			TimerMinutes = TimerSeconds = TimerFrames = 0;
+			TimerMinutesContinue = TimerSecondsContinue = TimerFramesContinue = 0;
+		} else {
+			TimerMinutesContinue = TimerMinutes;
+			TimerSecondsContinue = TimerSeconds;
+			TimerFramesContinue = TimerFrames;
+		}
+	}
 }
 
 void HunterHelper::SetPhysicsAndGiveUpgrades(ObjectMaster* character, int a2) {

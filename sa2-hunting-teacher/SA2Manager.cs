@@ -64,16 +64,17 @@ public partial class SA2Manager : IDisposable {
 
 		this.repititionsInPlace = repititionsInPlace;
 		this.sharedMemory = SA2Manager.MemoryMapper.CreateViewAccessor();
-		this.ApplyDataDefaults(this.level.LevelId, teacherForm.MspReversedHints(), teacherForm.BackToMenu());
+		this.ApplyDataDefaults(this.level.LevelId, teacherForm.MspReversedHints(), teacherForm.BackToMenu(), teacherForm.TimerReset());
 		this.InjectDll();
 	}
 
-	private void ApplyDataDefaults(LevelId level, bool mspReversedHints, bool backToMenu) {
+	private void ApplyDataDefaults(LevelId level, bool mspReversedHints, bool backToMenu, bool timerReset) {
 		this.HunterTeacherData.currentLevel = (int)level;
 		this.HunterTeacherData.inWinScreen = false;
 		this.HunterTeacherData.sequenceComplete = false;
 		this.HunterTeacherData.mspReversedHints = mspReversedHints;
 		this.HunterTeacherData.backToMenu = backToMenu;
+		this.HunterTeacherData.timerReset = timerReset;
 		this.HunterTeacherData.p1Id = 0;
 		this.HunterTeacherData.p2Id = 0;
 		this.HunterTeacherData.p3Id = 0;
@@ -267,6 +268,7 @@ public struct HunterTeacherData {
 	public bool levelLoading;
 	public bool mspReversedHints;
 	public bool backToMenu;
+	public bool timerReset;
 	public int p1Id;
 	public int p2Id;
 	public int p3Id;

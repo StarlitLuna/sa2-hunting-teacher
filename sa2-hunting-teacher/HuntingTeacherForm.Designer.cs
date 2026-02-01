@@ -32,6 +32,7 @@ partial class HuntingTeacherForm
 		components = new System.ComponentModel.Container();
 		System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(HuntingTeacherForm));
 		panel1 = new Panel();
+		timerReset = new CheckBox();
 		inPlaceRepititions = new CheckBox();
 		label3 = new Label();
 		backToMenu = new CheckBox();
@@ -47,6 +48,7 @@ partial class HuntingTeacherForm
 		reversedHintsTooltip = new ToolTip(components);
 		backToMenuTooltip = new ToolTip(components);
 		inPlaceRepititionsTooltip = new ToolTip(components);
+		timerResetTooltip = new ToolTip(components);
 		panel1.SuspendLayout();
 		((System.ComponentModel.ISupportInitialize)repetitions).BeginInit();
 		panel2.SuspendLayout();
@@ -54,6 +56,7 @@ partial class HuntingTeacherForm
 		// 
 		// panel1
 		// 
+		panel1.Controls.Add(timerReset);
 		panel1.Controls.Add(inPlaceRepititions);
 		panel1.Controls.Add(label3);
 		panel1.Controls.Add(backToMenu);
@@ -70,10 +73,23 @@ partial class HuntingTeacherForm
 		panel1.Size = new Size(827, 80);
 		panel1.TabIndex = 0;
 		// 
+		// timerReset
+		// 
+		timerReset.AutoSize = true;
+		timerReset.Checked = true;
+		timerReset.CheckState = CheckState.Checked;
+		timerReset.Location = new Point(369, 50);
+		timerReset.Name = "timerReset";
+		timerReset.Size = new Size(109, 24);
+		timerReset.TabIndex = 10;
+		timerReset.Text = "Timer Reset";
+		timerReset.UseVisualStyleBackColor = true;
+		timerReset.CheckedChanged += SettingsChanged;
+		// 
 		// inPlaceRepititions
 		// 
 		inPlaceRepititions.AutoSize = true;
-		inPlaceRepititions.Location = new Point(369, 50);
+		inPlaceRepititions.Location = new Point(484, 50);
 		inPlaceRepititions.Name = "inPlaceRepititions";
 		inPlaceRepititions.Size = new Size(157, 24);
 		inPlaceRepititions.TabIndex = 9;
@@ -235,4 +251,6 @@ partial class HuntingTeacherForm
 	private ToolTip backToMenuTooltip;
 	private CheckBox inPlaceRepititions;
 	private ToolTip inPlaceRepititionsTooltip;
+	private CheckBox timerReset;
+	private ToolTip timerResetTooltip;
 }
