@@ -165,7 +165,7 @@ public partial class HuntingTeacherForm : Form {
 	}
 
 	private void setEditor_Click(object sender, EventArgs e) {
-		SetEditor editorForm = new();
+		SetEditor editorForm = new(this.settings);
 		editorForm.ShowDialog(this);
 	}
 }

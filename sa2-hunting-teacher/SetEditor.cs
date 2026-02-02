@@ -1,17 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-
-namespace sa2_hunting_teacher {
+﻿namespace sa2_hunting_teacher {
 	public partial class SetEditor : Form {
-		public SetEditor() {
+		private readonly Settings settings;
+
+		public SetEditor(Settings settings) {
 			InitializeComponent();
+
+			this.settings = settings;
+		}
+
+		private void addSequence_Click(object sender, EventArgs e) {
+			//
 		}
 	}
 }

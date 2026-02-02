@@ -2,7 +2,7 @@
 
 namespace sa2_hunting_teacher;
 
-internal class Settings {
+public class Settings {
 	/// <summary>
 	/// The default value of the Reversed Hints checkbox that appears for Mad Space
 	/// When true (i.e. checked), the hints in Mad Space will be reversed (i.e. vanilla behavior)
