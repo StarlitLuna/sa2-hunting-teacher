@@ -32,6 +32,7 @@ partial class HuntingTeacherForm
 		components = new System.ComponentModel.Container();
 		System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(HuntingTeacherForm));
 		panel1 = new Panel();
+		setEditor = new Button();
 		timerReset = new CheckBox();
 		inPlaceRepititions = new CheckBox();
 		label3 = new Label();
@@ -56,6 +57,7 @@ partial class HuntingTeacherForm
 		// 
 		// panel1
 		// 
+		panel1.Controls.Add(setEditor);
 		panel1.Controls.Add(timerReset);
 		panel1.Controls.Add(inPlaceRepititions);
 		panel1.Controls.Add(label3);
@@ -70,8 +72,18 @@ partial class HuntingTeacherForm
 		panel1.Dock = DockStyle.Top;
 		panel1.Location = new Point(0, 0);
 		panel1.Name = "panel1";
-		panel1.Size = new Size(827, 80);
+		panel1.Size = new Size(855, 80);
 		panel1.TabIndex = 0;
+		// 
+		// setEditor
+		// 
+		setEditor.Location = new Point(359, 13);
+		setEditor.Name = "setEditor";
+		setEditor.Size = new Size(94, 29);
+		setEditor.TabIndex = 11;
+		setEditor.Text = "Set Editor";
+		setEditor.UseVisualStyleBackColor = true;
+		setEditor.Click += setEditor_Click;
 		// 
 		// timerReset
 		// 
@@ -132,7 +144,7 @@ partial class HuntingTeacherForm
 		// 
 		label2.Anchor = AnchorStyles.Top | AnchorStyles.Right;
 		label2.AutoSize = true;
-		label2.Location = new Point(477, 17);
+		label2.Location = new Point(505, 17);
 		label2.Name = "label2";
 		label2.Size = new Size(87, 20);
 		label2.TabIndex = 5;
@@ -141,7 +153,7 @@ partial class HuntingTeacherForm
 		// repetitions
 		// 
 		repetitions.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-		repetitions.Location = new Point(572, 15);
+		repetitions.Location = new Point(600, 15);
 		repetitions.Maximum = new decimal(new int[] { 9, 0, 0, 0 });
 		repetitions.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
 		repetitions.Name = "repetitions";
@@ -154,7 +166,7 @@ partial class HuntingTeacherForm
 		// 
 		resetBtn.Anchor = AnchorStyles.Top | AnchorStyles.Right;
 		resetBtn.Enabled = false;
-		resetBtn.Location = new Point(621, 13);
+		resetBtn.Location = new Point(649, 13);
 		resetBtn.Name = "resetBtn";
 		resetBtn.Size = new Size(94, 29);
 		resetBtn.TabIndex = 3;
@@ -165,7 +177,7 @@ partial class HuntingTeacherForm
 		// startBtn
 		// 
 		startBtn.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-		startBtn.Location = new Point(721, 12);
+		startBtn.Location = new Point(749, 12);
 		startBtn.Name = "startBtn";
 		startBtn.Size = new Size(94, 29);
 		startBtn.TabIndex = 2;
@@ -187,7 +199,7 @@ partial class HuntingTeacherForm
 		levelSelector.DataSource = null;
 		levelSelector.DropDownStyle = ComboBoxStyle.DropDownList;
 		levelSelector.FormattingEnabled = true;
-		levelSelector.Location = new Point(105, 11);
+		levelSelector.Location = new Point(108, 14);
 		levelSelector.Name = "levelSelector";
 		levelSelector.Size = new Size(245, 28);
 		levelSelector.TabIndex = 0;
@@ -199,7 +211,7 @@ partial class HuntingTeacherForm
 		panel2.Dock = DockStyle.Fill;
 		panel2.Location = new Point(0, 80);
 		panel2.Name = "panel2";
-		panel2.Size = new Size(827, 385);
+		panel2.Size = new Size(855, 396);
 		panel2.TabIndex = 1;
 		// 
 		// logBox
@@ -210,7 +222,7 @@ partial class HuntingTeacherForm
 		logBox.Name = "logBox";
 		logBox.ReadOnly = true;
 		logBox.ScrollBars = ScrollBars.Vertical;
-		logBox.Size = new Size(827, 385);
+		logBox.Size = new Size(855, 396);
 		logBox.TabIndex = 0;
 		logBox.WordWrap = false;
 		// 
@@ -218,11 +230,11 @@ partial class HuntingTeacherForm
 		// 
 		AutoScaleDimensions = new SizeF(8F, 20F);
 		AutoScaleMode = AutoScaleMode.Font;
-		ClientSize = new Size(827, 465);
+		ClientSize = new Size(855, 476);
 		Controls.Add(panel2);
 		Controls.Add(panel1);
 		Icon = (Icon)resources.GetObject("$this.Icon");
-		MinimumSize = new Size(775, 384);
+		MinimumSize = new Size(835, 400);
 		Name = "HuntingTeacherForm";
 		Text = "Hunting Teacher";
 		panel1.ResumeLayout(false);
@@ -253,4 +265,5 @@ partial class HuntingTeacherForm
 	private ToolTip inPlaceRepititionsTooltip;
 	private CheckBox timerReset;
 	private ToolTip timerResetTooltip;
+	private Button setEditor;
 }
