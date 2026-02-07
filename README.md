@@ -25,7 +25,7 @@ without any unnecessarily repeated sets.
   * [SA Mod Manager](https://github.com/X-Hax/SA-Mod-Manager/releases/latest)
 	* This tool doesn't require the mod loader to be installed, but it's highly recommended you have this anyway for the general fixes the mod loader provides
 	* As well as for the ability to install QoL speedrunning mods and practice mods.
-  * [SA2 Story Style Upgrades](https://github.com/QueenSuzie/sa2-story-style-upgrades/releases/latest)
+  * [SA2 Story Style Upgrades](https://github.com/StarlitLuna/sa2-story-style-upgrades/releases/latest)
 	* With `Include Current Hunting Level Upgrade` set to ON
 	* Can also be 1-Click installed from [GameBanana](https://gamebanana.com/mods/478254)
   * A [fully completed save file](https://www.speedrun.com/sa2b/resources/acci5) to play on
@@ -33,7 +33,7 @@ without any unnecessarily repeated sets.
 
 ### Installing
 
-The latest version can be found for download as an executable file on the [releases tab.](https://github.com/QueenSuzie/sa2-hunting-teacher/releases)
+The latest version can be found for download as an executable file on the [releases tab.](https://github.com/StarlitLuna/sa2-hunting-teacher/releases)
 
 ### Usage
 
