@@ -36,8 +36,13 @@ jobs:
           fi
           echo "current=$tag latest=$latest"
 
-  release:
+  test:
     needs: check
+    if: needs.check.outputs.should_release == 'true'
+    uses: ./.github/workflows/tests.yml
+
+  release:
+    needs: [check, test]
     if: needs.check.outputs.should_release == 'true'
     runs-on: windows-latest
     permissions:
@@ -53,15 +58,6 @@ jobs:
 
       - name: Restore
         run: dotnet restore sa2-hunting-teacher.sln
-
-      - name: Build tests
-        run: dotnet build unit-tests/unit-tests.csproj -c Release /p:Platform=x86 --no-restore
-
-      - name: Run tests
-        shell: pwsh
-        run: |
-          [Environment]::SetEnvironmentVariable('DOTNET_ROOT(x86)', 'C:\Program Files (x86)\dotnet', 'Process')
-          dotnet test unit-tests/unit-tests.csproj -c Release /p:Platform=x86 --no-restore --no-build
 
       - name: Publish
         shell: pwsh

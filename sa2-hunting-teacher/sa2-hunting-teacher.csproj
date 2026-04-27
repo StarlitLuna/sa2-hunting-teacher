@@ -27,7 +27,7 @@
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
     <PublishTrimmed>false</PublishTrimmed>
-    <Version>1.0.0</Version>
+    <Version>1.1.0</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
@@ -59,20 +59,20 @@
     <PackageReference Include="SharpCompress" Version="0.42.1" />
     <PackageReference Include="ZstdSharp.Port" Version="0.8.6" />
   </ItemGroup>
-  
+
   <PropertyGroup>
     <HelperProject>..\sa2-hunting-teacher-helper\sa2-hunting-teacher-helper.vcxproj</HelperProject>
     <HelperPlatform>x86</HelperPlatform>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <FileVersion>1.0.0.0</FileVersion>
+    <AssemblyVersion>1.1.0.0</AssemblyVersion>
+    <FileVersion>1.1.0.0</FileVersion>
   </PropertyGroup>
-  
+
   <Target Name="BuildHelper" BeforeTargets="Publish">
     <Message Text="Building helper: $(HelperProject) ($(Configuration)|$(HelperPlatform))" Importance="high" />
 
     <MSBuild Projects="$(HelperProject)" Targets="Build" Properties="Configuration=$(Configuration);Platform=$(HelperPlatform)" />
   </Target>
-  
+
   <Target Name="CopyHelperToPublish" AfterTargets="Publish">
     <ItemGroup>
       <HelperDll Include="..\bin\Release\hunting-teacher.helper.dll" />
