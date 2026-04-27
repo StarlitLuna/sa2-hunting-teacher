@@ -1,4 +1,6 @@
-﻿namespace sa2_hunting_teacher;
+﻿using sa2_hunting_teacher.Knuckles;
+
+namespace sa2_hunting_teacher;
 
 public enum Level {
 	WildCanyon,
@@ -24,6 +26,8 @@ public abstract class HuntingLevel(SA2Manager manager, byte repetitions) {
 	protected byte Repetitions { get; } = repetitions;
 
 	protected byte Repitition { get; set; } = 0;
+
+	public abstract Dictionary<int, string> PieceToHintInstance { get; }
 
 	public bool SequenceComplete() {
 		return SequenceCount >= this.Sequence.Length * this.Repetitions;

@@ -1,4 +1,6 @@
-﻿namespace sa2_hunting_teacher.Rouge;
+﻿using sa2_hunting_teacher.Knuckles;
+
+namespace sa2_hunting_teacher.Rouge;
 
 public class SecurityHall(SA2Manager manager, byte repetitions) : HuntingLevel(manager, repetitions) {
 	public override LevelId LevelId => LevelId.SecurityHall;
@@ -51,6 +53,7 @@ public class SecurityHall(SA2Manager manager, byte repetitions) : HuntingLevel(m
 
 	public override string ToString() => "Security Hall";
 
+	public override Dictionary<int, string> PieceToHintInstance => SecurityHall.PieceToHint;
 	public static Dictionary<int, string> PieceToHint { get; } = new Dictionary<int, string> {
 		{ Set.EnumKey(EnemyId.EveryoneSeenAtLeastOnceBefore), "Everyone has seen it at least once before..." },
 		{ Set.EnumKey(EnemyId.LonelyAtWork), "Lonely at work." },

@@ -91,7 +91,7 @@ public partial class HuntingTeacherForm : Form {
 	}
 
 	private void StartBtn_Click(object sender, EventArgs e) {
-		Level selectedLevel = (Level)this.levelSelector.SelectedValue!;
+		LevelRow selectedLevel = (LevelRow)this.levelSelector.SelectedItem!;
 		this.startBtn.Enabled = false;
 		this.repetitions.Enabled = false;
 		this.mspReverseHints.Enabled = false;

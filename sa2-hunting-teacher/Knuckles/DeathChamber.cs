@@ -53,6 +53,7 @@ public class DeathChamber(SA2Manager manager, byte repetitions) : HuntingLevel(m
 
 	public override string ToString() => "Death Chamber";
 
+	public override Dictionary<int, string> PieceToHintInstance => DeathChamber.PieceToHint;
 	public static Dictionary<int, string> PieceToHint { get; } = new Dictionary<int, string> {
 		{ Set.EnumKey(EnemyId.RedBody), "Red body." },
 		{ Set.EnumKey(EnemyId.Sniper), "Sniper." },

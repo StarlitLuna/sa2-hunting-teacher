@@ -50,6 +50,7 @@ public class WildCanyon(SA2Manager manager, byte repetitions) : HuntingLevel(man
 
 	public override string ToString() => "Wild Canyon";
 
+	public override Dictionary<int, string> PieceToHintInstance => WildCanyon.PieceToHint;
 	public static Dictionary<int, string> PieceToHint { get; } = new Dictionary<int, string>{
 		{ Set.EnumKey(EnemyId.SuspendedCeilingEnemy), "A suspended ceiling. (enemy)" },
 		{ Set.EnumKey(EnemyId.SandyPathRhino), "On a sandy path to a stone statue head. (Rhino)" },

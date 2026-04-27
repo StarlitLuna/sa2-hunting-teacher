@@ -103,21 +103,21 @@ namespace sa2_hunting_teacher {
 		}
 
 		private void LoadFromSettings() {
-			foreach (PersistedSequence sequence in this.settings.CustomSequences) {
+			foreach (HuntingSequence sequence in this.settings.CustomSequences) {
 				CustomSequence seq = SetEditor.FromPersisted(sequence);
 				this.sequences.Add(seq);
 				this.customSequences.Items.Add(new ListViewItem(seq.Name));
 			}
 		}
 
-		private static CustomSequence FromPersisted(PersistedSequence sequence) {
+		private static CustomSequence FromPersisted(HuntingSequence sequence) {
 			CustomSequence seq = new() {
 				Id = sequence.Id,
 				Name = sequence.Name,
 				Level = sequence.Level
 			};
 
-			foreach (PersistedSet s in sequence.Sets) {
+			foreach (HuntingSet s in sequence.Sets) {
 				seq.Sets.Add(new CustomSet {
 					P1Id = s.P1Id,
 					P2Id = s.P2Id,
@@ -128,8 +128,8 @@ namespace sa2_hunting_teacher {
 			return seq;
 		}
 
-		private static PersistedSequence ToPersisted(CustomSequence seq) {
-			PersistedSequence sequence = new() {
+		private static HuntingSequence ToPersisted(CustomSequence seq) {
+			HuntingSequence sequence = new() {
 				Id = seq.Id,
 				Name = seq.Name,
 				Level = seq.Level!.Value
@@ -140,7 +140,7 @@ namespace sa2_hunting_teacher {
 					continue;
 				}
 
-				sequence.Sets.Add(new PersistedSet {
+				sequence.Sets.Add(new HuntingSet {
 					P1Id = set.P1Id!.Value,
 					P2Id = set.P2Id!.Value,
 					P3Id = set.P3Id!.Value
@@ -159,7 +159,7 @@ namespace sa2_hunting_teacher {
 		}
 
 		private void PersistSequences() {
-			List<PersistedSequence> persisted = new();
+			List<HuntingSequence> persisted = new();
 			foreach (CustomSequence seq in this.sequences) {
 				persisted.Add(SetEditor.ToPersisted(seq));
 			}

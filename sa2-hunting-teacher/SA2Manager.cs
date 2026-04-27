@@ -21,9 +21,9 @@ public partial class SA2Manager : IDisposable {
 	private readonly bool repititionsInPlace;
 	private HunterTeacherData HunterTeacherData;
 
-	private SA2Manager(Level selection, byte repetitions, HuntingTeacherForm teacherForm, bool repititionsInPlace) {
+	private SA2Manager(LevelRow selection, byte repetitions, HuntingTeacherForm teacherForm, bool repititionsInPlace) {
 		this.teacherForm = teacherForm;
-		this.level = selection switch {
+		this.level = selection.Level switch {
 			Level.WildCanyon => new WildCanyon(this, repetitions),
 			Level.PumpkinHill => new PumpkinHill(this, repetitions),
 			Level.AquaticMine => new AquaticMine(this, repetitions),
@@ -35,6 +35,10 @@ public partial class SA2Manager : IDisposable {
 			Level.MadSpace => new MadSpace(this, repetitions),
 			_ => throw new ArgumentException("Invalid Level Selected!")
 		};
+
+		if (selection.CustomSequence != null) {
+			this.level = new CustomHuntingLevel(this, repetitions, selection.CustomSequence, this.level.PieceToHintInstance);
+		}
 
 		Process[] processes = Process.GetProcessesByName(SONIC_EXECUTABLE);
 		if (processes.Length < 1) {
@@ -179,7 +183,7 @@ public partial class SA2Manager : IDisposable {
 		this.CloseResource();
 	}
 
-	public static void Start(Level selection, byte repetitions, HuntingTeacherForm teacherForm, bool repititionsInPlace) {
+	public static void Start(LevelRow selection, byte repetitions, HuntingTeacherForm teacherForm, bool repititionsInPlace) {
 		SA2Manager.CanRun = true;
 		 
 		using (SA2Manager instance = new(selection, repetitions, teacherForm, repititionsInPlace)) {

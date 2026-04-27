@@ -1,4 +1,6 @@
-﻿namespace sa2_hunting_teacher.Rouge;
+﻿using sa2_hunting_teacher.Knuckles;
+
+namespace sa2_hunting_teacher.Rouge;
 
 public class MadSpace(SA2Manager manager, byte repetitions) : HuntingLevel(manager, repetitions) {
 	public override LevelId LevelId => LevelId.MadSpace;
@@ -44,6 +46,7 @@ public class MadSpace(SA2Manager manager, byte repetitions) : HuntingLevel(manag
 
 	public override string ToString() => "Mad Space";
 
+	public override Dictionary<int, string> PieceToHintInstance => MadSpace.PieceToHint;
 	public static Dictionary<int, string> PieceToHint { get; } = new Dictionary<int, string> {
 		{ Set.EnumKey(EnemyId.Watchman), "Watchman of the yellow balcony" },
 		{ Set.EnumKey(EnemyId.EvilLiquid), "Evil liquid" },

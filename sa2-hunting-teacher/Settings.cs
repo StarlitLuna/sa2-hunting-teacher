@@ -44,7 +44,7 @@ public class Settings {
 	/// <summary>
 	/// User-authored custom sequences from the Set Editor.
 	/// </summary>
-	public List<PersistedSequence> CustomSequences { get; set; } = new();
+	public List<HuntingSequence> CustomSequences { get; set; } = new();
 
 	/// <summary>
 	/// Monotonically increasing identifier handed out to each newly-added custom sequence.
@@ -98,14 +98,14 @@ public class Settings {
 	}
 }
 
-public class PersistedSequence {
+public class HuntingSequence {
 	public long Id { get; set; }
 	public string Name { get; set; } = "";
 	public Level Level { get; set; }
-	public List<PersistedSet> Sets { get; set; } = new();
+	public List<HuntingSet> Sets { get; set; } = new();
 }
 
-public class PersistedSet {
+public class HuntingSet {
 	public int P1Id { get; set; }
 	public int P2Id { get; set; }
 	public int P3Id { get; set; }

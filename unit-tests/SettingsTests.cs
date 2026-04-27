@@ -133,11 +133,11 @@ public class SettingsTests : IDisposable {
 		settings.RepititionsInPlace = true;
 		settings.Repititions = 11;
 		settings.NextSequenceId = 42;
-		settings.CustomSequences.Add(new PersistedSequence {
+		settings.CustomSequences.Add(new HuntingSequence {
 			Id = 7,
 			Name = "Test",
 			Level = Level.WildCanyon,
-			Sets = [new PersistedSet { P1Id = 1, P2Id = 2, P3Id = 3 }],
+			Sets = [new HuntingSet { P1Id = 1, P2Id = 2, P3Id = 3 }],
 		});
 
 		settings.Save();
@@ -319,13 +319,13 @@ public class SettingsTests : IDisposable {
 		original.RepititionsInPlace = true;
 		original.Repititions = 17;
 		original.NextSequenceId = 1234567890123L;
-		original.CustomSequences.Add(new PersistedSequence {
+		original.CustomSequences.Add(new HuntingSequence {
 			Id = 1234567890122L,
 			Name = "Round Trip",
 			Level = Level.MadSpace,
 			Sets = [
-				new PersistedSet { P1Id = 0x1234, P2Id = 0x5678, P3Id = 0x9ABC },
-				new PersistedSet { P1Id = 1, P2Id = 2, P3Id = 3 },
+				new HuntingSet { P1Id = 0x1234, P2Id = 0x5678, P3Id = 0x9ABC },
+				new HuntingSet { P1Id = 1, P2Id = 2, P3Id = 3 },
 			],
 		});
 
@@ -354,7 +354,7 @@ public class SettingsTests : IDisposable {
 
 	[Fact]
 	public void PersistedSequence_DefaultsToEmptyNameAndEmptySets() {
-		PersistedSequence seq = new();
+		HuntingSequence seq = new();
 
 		Assert.Equal(0L, seq.Id);
 		Assert.Equal("", seq.Name);
@@ -364,7 +364,7 @@ public class SettingsTests : IDisposable {
 
 	[Fact]
 	public void PersistedSet_DefaultsToZeroIds() {
-		PersistedSet set = new();
+		HuntingSet set = new();
 
 		Assert.Equal(0, set.P1Id);
 		Assert.Equal(0, set.P2Id);

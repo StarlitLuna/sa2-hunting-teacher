@@ -44,6 +44,7 @@ public class MeteorHerd(SA2Manager manager, byte repetitions) : HuntingLevel(man
 
 	public override string ToString() => "Meteor Herd";
 
+	public override Dictionary<int, string> PieceToHintInstance => MeteorHerd.PieceToHint;
 	public static Dictionary<int, string> PieceToHint { get; } = new Dictionary<int, string> {
 		{ Set.EnumKey(EnemyId.DangerousLiquidMiddle), "Dangerous liquid. (middle)" },
 		{ Set.EnumKey(EnemyId.DangerousLiquidTop), "Dangerous liquid. (ARK)" },

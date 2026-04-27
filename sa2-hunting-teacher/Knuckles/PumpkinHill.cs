@@ -42,6 +42,7 @@ public class PumpkinHill(SA2Manager manager, byte repetitions) : HuntingLevel(ma
 
 	public override string ToString() => "Pumpkin Hill";
 
+	public override Dictionary<int, string> PieceToHintInstance => PumpkinHill.PieceToHint;
 	public static Dictionary<int, string> PieceToHint { get; } = new Dictionary<int, string> {
 		{ Set.EnumKey(EnemyId.KingOfTheHill), "King of the hill." },
 		{ Set.EnumKey(EnemyId.ThreeBrothersTombstone), "Three brothers' tombstone. (enemy)" },

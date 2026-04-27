@@ -7,7 +7,7 @@ public sealed class LevelRow {
 	public Level Level { get; init; } = default;
 	public string Text { get; init; } = "";
 	public string Group { get; init; } = "";
-	public PersistedSequence? CustomSequence { get; init; }
+	public HuntingSequence? CustomSequence { get; init; }
 }
 
 internal static class SupportedLevels {
@@ -27,6 +27,20 @@ internal static class SupportedLevels {
 		{ Level.MadSpace, ("Mad Space", "Rouge") },
 	};
 
+	public static readonly Dictionary<Level, LevelId> LevelToLevelId = new() {
+		/** Knuckles */
+		{ Level.WildCanyon, LevelId.WildCanyon },
+		{ Level.PumpkinHill, LevelId.PumpkinHill },
+		{ Level.AquaticMine, LevelId.AquaticMine },
+		{ Level.DeathChamber, LevelId.DeathChamber },
+		{ Level.MeteorHerd, LevelId.MeteorHerd },
+		/** Rouge */
+		{ Level.DryLagoon, LevelId.DryLagoon },
+		{ Level.EggQuarters, LevelId.EggQuarters },
+		{ Level.SecurityHall, LevelId.SecurityHall },
+		{ Level.MadSpace, LevelId.MadSpace },
+	};
+
 	private static readonly Dictionary<string, int> GroupRank = new() {
 		{ "Knuckles", 0 },
 		{ "Rouge", 1 },
@@ -37,7 +51,7 @@ internal static class SupportedLevels {
 
 	public static void Configure(
 		GroupedComboBox combo,
-		IEnumerable<PersistedSequence>? customSequences = null,
+		IEnumerable<HuntingSequence>? customSequences = null,
 		Level? initialSelection = null
 	) {
 		List<LevelRow> rows = new();
@@ -50,7 +64,7 @@ internal static class SupportedLevels {
 		}
 
 		if (customSequences != null) {
-			foreach (PersistedSequence custom in customSequences) {
+			foreach (HuntingSequence custom in customSequences) {
 				rows.Add(new LevelRow {
 					Level = custom.Level,
 					Text = custom.Name,
