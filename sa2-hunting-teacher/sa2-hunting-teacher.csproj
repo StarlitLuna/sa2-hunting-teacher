@@ -70,7 +70,7 @@
   <Target Name="BuildHelper" BeforeTargets="Publish">
     <Message Text="Building helper: $(HelperProject) ($(Configuration)|$(HelperPlatform))" Importance="high" />
 
-    <MSBuild Projects="$(HelperProject)" Targets="Build" Properties="Configuration=$(Configuration);Platform=$(HelperPlatform)" />
+    <MSBuild Projects="$(HelperProject)" Targets="Build" Properties="Configuration=$(Configuration);Platform=$(HelperPlatform);SolutionDir=$(MSBuildThisFileDirectory)..\" />
   </Target>
   
   <Target Name="CopyHelperToPublish" AfterTargets="Publish">
