@@ -1,4 +1,6 @@
-﻿namespace sa2_hunting_teacher.Rouge;
+﻿using sa2_hunting_teacher.Knuckles;
+
+namespace sa2_hunting_teacher.Rouge;
 
 public class MadSpace(SA2Manager manager, byte repetitions) : HuntingLevel(manager, repetitions) {
 	public override LevelId LevelId => LevelId.MadSpace;
@@ -44,6 +46,7 @@ public class MadSpace(SA2Manager manager, byte repetitions) : HuntingLevel(manag
 
 	public override string ToString() => "Mad Space";
 
+	public override Dictionary<int, string> PieceToHintInstance => MadSpace.PieceToHint;
 	public static Dictionary<int, string> PieceToHint { get; } = new Dictionary<int, string> {
 		{ Set.EnumKey(EnemyId.Watchman), "Watchman of the yellow balcony" },
 		{ Set.EnumKey(EnemyId.EvilLiquid), "Evil liquid" },
@@ -134,6 +137,10 @@ public class MadSpace(SA2Manager manager, byte repetitions) : HuntingLevel(manag
 		{ Set.EnumKey(P3Id.BetweenMachinesThreeLegs), "In between the machines with three legs" },
 		{ Set.EnumKey(P3Id.VeryYellowPlatformStatic), "Very yellow platform (static)" }
 	};
+
+	public static Dictionary<int, string> ImpossiblePieces { get; } = new Dictionary<int, string>();
+
+	public static LevelCatalog Catalog { get; } = LevelCatalog.Build<P1Id, P2Id, P3Id, EnemyId>(MadSpace.PieceToHint, MadSpace.ImpossiblePieces);
 
 	internal enum EnemyId {
 		Watchman = 0x010A,

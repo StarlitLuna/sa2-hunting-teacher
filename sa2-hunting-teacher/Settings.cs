@@ -2,7 +2,7 @@
 
 namespace sa2_hunting_teacher;
 
-internal class Settings {
+public class Settings {
 	/// <summary>
 	/// The default value of the Reversed Hints checkbox that appears for Mad Space
 	/// When true (i.e. checked), the hints in Mad Space will be reversed (i.e. vanilla behavior)
@@ -40,6 +40,17 @@ internal class Settings {
 	/// Defaults to <c>3</c>.
 	/// </summary>
 	public int Repititions { get; set; } = 3;
+
+	/// <summary>
+	/// User-authored custom sequences from the Set Editor.
+	/// </summary>
+	public List<HuntingSequence> CustomSequences { get; set; } = new();
+
+	/// <summary>
+	/// Monotonically increasing identifier handed out to each newly-added custom sequence.
+	/// Starts at <c>1</c> and is never decremented even when sequences are deleted.
+	/// </summary>
+	public long NextSequenceId { get; set; } = 1;
 
 	public static readonly string AppDataPath = Path.Combine(
 		System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData),
@@ -80,9 +91,23 @@ internal class Settings {
 	}
 
 	public void Save() {
+		Directory.CreateDirectory(Settings.AppDataPath);
 		File.WriteAllText(
 			Settings.SettingsPath,
 			JsonSerializer.Serialize<Settings>(this, Settings.JSONOptions)
 		);
 	}
+}
+
+public class HuntingSequence {
+	public long Id { get; set; }
+	public string Name { get; set; } = "";
+	public Level Level { get; set; }
+	public List<HuntingSet> Sets { get; set; } = new();
+}
+
+public class HuntingSet {
+	public int P1Id { get; set; }
+	public int P2Id { get; set; }
+	public int P3Id { get; set; }
 }

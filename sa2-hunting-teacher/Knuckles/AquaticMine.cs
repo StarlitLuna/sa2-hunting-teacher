@@ -42,6 +42,8 @@ public class AquaticMine(SA2Manager manager, byte repetitions) : HuntingLevel(ma
 
 	public override string ToString() => "Aquatic Mine";
 
+	public override Dictionary<int, string> PieceToHintInstance => AquaticMine.PieceToHint;
+
 	public static Dictionary<int, string> PieceToHint { get; } = new Dictionary<int, string> {
 		{ Set.EnumKey(EnemyId.WaterLevel2HeightLeft), "Water level 2 height. (left)" },
 		{ Set.EnumKey(EnemyId.WaterLevel2HeightRight), "Water level 2 height. (right)" },
@@ -142,6 +144,10 @@ public class AquaticMine(SA2Manager manager, byte repetitions) : HuntingLevel(ma
 		{ Set.EnumKey(P3Id.StairShapedBrickRoomHigh), "Stair-shaped brick room. (high)" },
 		{ Set.EnumKey(P3Id.ChaseTheSkull), "Chase the skull!" }
 	};
+
+	public static Dictionary<int, string> ImpossiblePieces { get; } = new Dictionary<int, string>();
+
+	public static LevelCatalog Catalog { get; } = LevelCatalog.Build<P1Id, P2Id, P3Id, EnemyId>(AquaticMine.PieceToHint, AquaticMine.ImpossiblePieces);
 
 	internal enum EnemyId {
 		WaterLevel2HeightLeft = 0x000A,

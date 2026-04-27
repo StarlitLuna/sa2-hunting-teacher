@@ -1,4 +1,6 @@
-﻿namespace sa2_hunting_teacher.Rouge;
+﻿using sa2_hunting_teacher.Knuckles;
+
+namespace sa2_hunting_teacher.Rouge;
 
 public class DryLagoon(SA2Manager manager, byte repetitions) : HuntingLevel(manager, repetitions) {
 	public override LevelId LevelId => LevelId.DryLagoon;
@@ -51,6 +53,7 @@ public class DryLagoon(SA2Manager manager, byte repetitions) : HuntingLevel(mana
 
 	public override string ToString() => "Dry Lagoon";
 
+	public override Dictionary<int, string> PieceToHintInstance => DryLagoon.PieceToHint;
 	public static Dictionary<int, string> PieceToHint { get; } = new Dictionary<int, string>{
 		{ Set.EnumKey(EnemyId.GunsGuardForTheStorageArea), "GUN's guard for the storage area." },
 		{ Set.EnumKey(EnemyId.ProtectorOfThePond), "Protector of the pond." },
@@ -150,6 +153,10 @@ public class DryLagoon(SA2Manager manager, byte repetitions) : HuntingLevel(mana
 		{ Set.EnumKey(P3Id.InFrontOfWhiteBricks), "In front of the white bricks." },
 		{ Set.EnumKey(P3Id.ButterflysTreasure), "Butterfly's treasure." }
 	};
+
+	public static Dictionary<int, string> ImpossiblePieces { get; } = new Dictionary<int, string>();
+
+	public static LevelCatalog Catalog { get; } = LevelCatalog.Build<P1Id, P2Id, P3Id, EnemyId>(DryLagoon.PieceToHint, DryLagoon.ImpossiblePieces);
 
 	internal enum EnemyId {
 		GunsGuardForTheStorageArea = 0x050A,

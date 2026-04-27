@@ -1,0 +1,41 @@
+name: Tests
+
+on:
+  pull_request:
+  push:
+    branches:
+      - 'master'
+    tags:
+      - '*'
+
+concurrency:
+  group: tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.x'
+
+      - uses: microsoft/setup-msbuild@v2
+
+      - name: Restore
+        run: dotnet restore sa2-hunting-teacher.sln
+
+      - name: Build tests
+        run: dotnet build unit-tests/unit-tests.csproj -c Release /p:Platform=x86 --no-restore
+
+      - name: Run tests
+        shell: pwsh
+        run: |
+          [Environment]::SetEnvironmentVariable('DOTNET_ROOT(x86)', 'C:\Program Files (x86)\dotnet', 'Process')
+          dotnet test unit-tests/unit-tests.csproj -c Release /p:Platform=x86 --no-restore --no-build
+
+      - name: Publish (verifies full release pipeline)
+        shell: pwsh
+        run: msbuild sa2-hunting-teacher/sa2-hunting-teacher.csproj /t:Publish /p:Configuration=Release /p:Platform=x86 /p:PublishProfile=FolderProfile "/p:SolutionDir=$env:GITHUB_WORKSPACE\"

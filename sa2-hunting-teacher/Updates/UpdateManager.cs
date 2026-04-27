@@ -6,7 +6,7 @@ using System.Diagnostics;
 namespace sa2_hunting_teacher.Updates;
 
 public class UpdateManager {
-	private static readonly string API_URL = "https://api.github.com/repos/QueenSuzie/sa2-hunting-teacher";
+	private static readonly string API_URL = "https://api.github.com/repos/StarlitLuna/sa2-hunting-teacher";
 	private static readonly string ASSET_NAME = "sa2-hunting-teacher.7z";
 
 	private readonly HuntingTeacherForm mainForm;

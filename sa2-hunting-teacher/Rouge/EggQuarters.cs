@@ -1,4 +1,6 @@
-﻿namespace sa2_hunting_teacher.Rouge;
+﻿using sa2_hunting_teacher.Knuckles;
+
+namespace sa2_hunting_teacher.Rouge;
 
 public class EggQuarters(SA2Manager manager, byte repetitions) : HuntingLevel(manager, repetitions) {
 	public override LevelId LevelId => LevelId.EggQuarters;
@@ -43,6 +45,7 @@ public class EggQuarters(SA2Manager manager, byte repetitions) : HuntingLevel(ma
 
 	public override string ToString() => "Egg Quarters";
 
+	public override Dictionary<int, string> PieceToHintInstance => EggQuarters.PieceToHint;
 	public static Dictionary<int, string> PieceToHint { get; } = new Dictionary<int, string> {
 		{ Set.EnumKey(EnemyId.YellowHeadRed), "Yellow head. (red)" },
 		{ Set.EnumKey(EnemyId.RedWarriorRed), "Red warrior. (red)" },
@@ -147,6 +150,12 @@ public class EggQuarters(SA2Manager manager, byte repetitions) : HuntingLevel(ma
 		{ Set.EnumKey(P3Id.InTheMiddleOfTheRoom), "In the middle of the room." },
 		{ Set.EnumKey(P3Id.UnderTheScorpion), "Under the scorpion." },
 	};
+
+	public static Dictionary<int, string> ImpossiblePieces { get; } = new Dictionary<int, string> {
+		{ Set.EnumKey(P2Id.UnderTheBellyImpossible), "Under the belly." }
+	};
+
+	public static LevelCatalog Catalog { get; } = LevelCatalog.Build<P1Id, P2Id, P3Id, EnemyId>(EggQuarters.PieceToHint, EggQuarters.ImpossiblePieces);
 
 	internal enum EnemyId {
 		YellowHeadRed = 0x000A,

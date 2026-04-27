@@ -53,6 +53,7 @@ public class DeathChamber(SA2Manager manager, byte repetitions) : HuntingLevel(m
 
 	public override string ToString() => "Death Chamber";
 
+	public override Dictionary<int, string> PieceToHintInstance => DeathChamber.PieceToHint;
 	public static Dictionary<int, string> PieceToHint { get; } = new Dictionary<int, string> {
 		{ Set.EnumKey(EnemyId.RedBody), "Red body." },
 		{ Set.EnumKey(EnemyId.Sniper), "Sniper." },
@@ -159,6 +160,10 @@ public class DeathChamber(SA2Manager manager, byte repetitions) : HuntingLevel(m
 		{ Set.EnumKey(P3Id.FlatScorpion), "Flat scorpion." },
 		{ Set.EnumKey(P3Id.UnderTheRedLight), "Under the red light." }
 	};
+
+	public static Dictionary<int, string> ImpossiblePieces { get; } = new Dictionary<int, string>();
+
+	public static LevelCatalog Catalog { get; } = LevelCatalog.Build<P1Id, P2Id, P3Id, EnemyId>(DeathChamber.PieceToHint, DeathChamber.ImpossiblePieces);
 
 	internal enum EnemyId {
 		RedBody = 0x000A,

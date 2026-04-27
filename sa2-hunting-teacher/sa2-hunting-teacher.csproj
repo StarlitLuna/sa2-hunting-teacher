@@ -13,12 +13,13 @@
     <StartupObject>sa2_hunting_teacher.Program</StartupObject>
     <ApplicationIcon>icon.ico</ApplicationIcon>
     <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
-    <Authors>QueenSuzie</Authors>
+    <Authors>Luna</Authors>
     <Product>SA2 Hunting Teacher</Product>
     <Description>Helps to teach hunting pieces by ensuring player sees all pieces.</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <Copyright>$(Authors)</Copyright>
     <Platforms>x86</Platforms>
+    <RuntimeIdentifiers>win-x86</RuntimeIdentifiers>
     <BaseOutputPath>$(SolutionDir)bin\</BaseOutputPath>
 	<OutputPath>$(BaseOutputPath)$(Configuration)\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>

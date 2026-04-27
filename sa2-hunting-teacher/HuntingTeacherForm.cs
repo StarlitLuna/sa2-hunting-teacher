@@ -7,43 +7,16 @@ public partial class HuntingTeacherForm : Form {
 	private readonly Settings settings;
 	private readonly UpdateManager updateManager;
 
-	public sealed class LevelRow {
-		public Level Level { get; init; } = default;
-		public string Text { get; init; } = "";
-		public string Group { get; init; } = "";
-	}
-
-	private static readonly Dictionary<Level, (string LevelText, string Category)> SupportedLevels = new() {
-		/** Knuckles */
-		{ Level.WildCanyon, ("Wild Canyon", "Knuckles") },
-		{ Level.PumpkinHill, ("Pumpkin Hill", "Knuckles") },
-		{ Level.AquaticMine, ("Aquatic Mine", "Knuckles") },
-		{ Level.DeathChamber, ("Death Chamber", "Knuckles") },
-		{ Level.MeteorHerd, ("Meteor Herd", "Knuckles") },
-		/** Rouge */
-		{ Level.DryLagoon, ("Dry Lagoon", "Rouge") },
-		{ Level.EggQuarters, ("Egg Quarters", "Rouge") },
-		{ Level.SecurityHall, ("Security Hall", "Rouge") },
-		{ Level.MadSpace, ("Mad Space", "Rouge") },
-	};
-
 	public HuntingTeacherForm() {
 		InitializeComponent();
 
 		this.Text += " - v" + Application.ProductVersion;
 		this.updateManager = new UpdateManager(this);
 		HuntingTeacherForm.CurrentLogBox = this.logBox;
-		this.levelSelector.DisplayMember = nameof(LevelRow.Text);
-		this.levelSelector.ValueMember = nameof(LevelRow.Level);
-		this.levelSelector.GroupMember = nameof(LevelRow.Group);
-		this.levelSelector.SelectedValue = Level.WildCanyon;
-		this.levelSelector.DataSource = HuntingTeacherForm.SupportedLevels.Select(kvp => new LevelRow {
-			Level = kvp.Key,
-			Text = kvp.Value.LevelText,
-			Group = kvp.Value.Category
-		}).ToList();
 
 		this.settings = Settings.Load();
+		SupportedLevels.Configure(this.levelSelector, this.settings.CustomSequences, Level.WildCanyon);
+
 		InitializeSettings();
 		InitializeTooltips();
 
@@ -118,7 +91,7 @@ public partial class HuntingTeacherForm : Form {
 	}
 
 	private void StartBtn_Click(object sender, EventArgs e) {
-		Level selectedLevel = (Level)this.levelSelector.SelectedValue!;
+		LevelRow selectedLevel = (LevelRow)this.levelSelector.SelectedItem!;
 		this.startBtn.Enabled = false;
 		this.repetitions.Enabled = false;
 		this.mspReverseHints.Enabled = false;
@@ -162,5 +135,12 @@ public partial class HuntingTeacherForm : Form {
 
 	private void SettingsChanged(object sender, EventArgs e) {
 		this.SaveSettings();
+	}
+
+	private void setEditor_Click(object sender, EventArgs e) {
+		Level? previousLevel = this.levelSelector.SelectedValue as Level?;
+		SetEditor editorForm = new(this.settings);
+		editorForm.ShowDialog(this);
+		SupportedLevels.Configure(this.levelSelector, this.settings.CustomSequences, previousLevel);
 	}
 }
