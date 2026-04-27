@@ -414,5 +414,6 @@ public class HuntingLevelTests : IDisposable {
 		: HuntingLevel(manager, repetitions) {
 		public override LevelId LevelId => LevelId.WildCanyon;
 		protected override Set[] Sequence { get; } = sequence;
+		public override Dictionary<int, string> PieceToHintInstance { get; } = new();
 	}
 }

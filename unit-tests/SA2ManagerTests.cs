@@ -334,9 +334,10 @@ public class SA2ManagerTests : IDisposable {
 	public void Start_SetsCanRunTrue_BeforeFailing_OnInvalidLevel() {
 		Reflect.SetStatic(typeof(SA2Manager), "CanRun", false);
 		HuntingTeacherForm uninitForm = (HuntingTeacherForm)RuntimeHelpers.GetUninitializedObject(typeof(HuntingTeacherForm));
+		LevelRow row = new() { Level = (Level)999 };
 
 		Assert.Throws<ArgumentException>(
-			() => SA2Manager.Start((Level)999, 1, uninitForm, false)
+			() => SA2Manager.Start(row, 1, uninitForm, false)
 		);
 
 		Assert.True(Reflect.GetStatic<bool>(typeof(SA2Manager), "CanRun"));
@@ -345,9 +346,10 @@ public class SA2ManagerTests : IDisposable {
 	[Fact]
 	public void Start_Throws_OnInvalidLevelEnum() {
 		HuntingTeacherForm uninitForm = (HuntingTeacherForm)RuntimeHelpers.GetUninitializedObject(typeof(HuntingTeacherForm));
+		LevelRow row = new() { Level = (Level)999 };
 
 		ArgumentException ex = Assert.Throws<ArgumentException>(
-			() => SA2Manager.Start((Level)999, 1, uninitForm, false)
+			() => SA2Manager.Start(row, 1, uninitForm, false)
 		);
 
 		Assert.Equal("Invalid Level Selected!", ex.Message);
@@ -360,9 +362,10 @@ public class SA2ManagerTests : IDisposable {
 		}
 
 		HuntingTeacherForm uninitForm = (HuntingTeacherForm)RuntimeHelpers.GetUninitializedObject(typeof(HuntingTeacherForm));
+		LevelRow row = new() { Level = Level.WildCanyon };
 
 		ArgumentException ex = Assert.Throws<ArgumentException>(
-			() => SA2Manager.Start(Level.WildCanyon, 1, uninitForm, false)
+			() => SA2Manager.Start(row, 1, uninitForm, false)
 		);
 
 		Assert.Equal("SA2 Is Not Running!", ex.Message);
