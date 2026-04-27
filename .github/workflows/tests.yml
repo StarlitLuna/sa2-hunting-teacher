@@ -48,7 +48,45 @@ jobs:
         run: dotnet build unit-tests/unit-tests.csproj --configuration Release /p:Platform=x86 --no-restore
 
       - name: Run tests
-        run: dotnet test unit-tests/unit-tests.csproj --configuration Release --no-build /p:Platform=x86
+        shell: pwsh
+        run: |
+          [Environment]::SetEnvironmentVariable('DOTNET_ROOT(x86)', 'C:\Program Files (x86)\dotnet', 'Process')
+
+          Write-Host '=== x86 .NET host resolution inputs ==='
+          Write-Host "DOTNET_ROOT                = $env:DOTNET_ROOT"
+          Write-Host "DOTNET_ROOT(x86)           = $([Environment]::GetEnvironmentVariable('DOTNET_ROOT(x86)'))"
+          Write-Host "DOTNET_ROOT_X86            = $env:DOTNET_ROOT_X86"
+
+          $regPaths = @(
+            'HKLM:\SOFTWARE\dotnet\Setup\InstalledVersions\x86',
+            'HKLM:\SOFTWARE\WOW6432Node\dotnet\Setup\InstalledVersions\x86'
+          )
+          foreach ($p in $regPaths) {
+            if (Test-Path $p) {
+              $loc = (Get-ItemProperty -Path $p -Name InstallLocation -ErrorAction SilentlyContinue).InstallLocation
+              Write-Host "Registry: $p\InstallLocation = $loc"
+            } else {
+              Write-Host "Registry: $p  (absent)"
+            }
+          }
+
+          $x86Dir = 'C:\Program Files (x86)\dotnet'
+          Write-Host ""
+          Write-Host "=== contents of $x86Dir\host\fxr ==="
+          if (Test-Path "$x86Dir\host\fxr") {
+            Get-ChildItem "$x86Dir\host\fxr" | ForEach-Object { Write-Host "  $($_.Name)" }
+          } else {
+            Write-Host "  (missing)"
+          }
+          Write-Host "=== contents of $x86Dir\shared ==="
+          if (Test-Path "$x86Dir\shared") {
+            Get-ChildItem "$x86Dir\shared" -Recurse -Depth 1 | Select-Object -ExpandProperty FullName | ForEach-Object { Write-Host "  $_" }
+          } else {
+            Write-Host "  (missing)"
+          }
+          Write-Host '======================================='
+
+          dotnet test unit-tests/unit-tests.csproj --configuration Release --no-build /p:Platform=x86
 
       - name: Publish (verifies full release pipeline)
         run: msbuild sa2-hunting-teacher/sa2-hunting-teacher.csproj /t:Publish /p:Configuration=Release /p:Platform=x86 /p:PublishProfile=FolderProfile
