@@ -427,6 +427,30 @@ namespace sa2_hunting_teacher {
 			}
 
 			LevelCatalog catalog = LevelCatalog.Get(current.Level.Value);
+			List<object> items = SetEditor.BuildOptions(catalog, slot, model);
+
+			ComboBox combo = row.GetCombo(slot);
+			combo.BeginUpdate();
+			combo.Items.Clear();
+			foreach (object item in items) {
+				combo.Items.Add(item);
+			}
+
+			int? selected = model.GetSlot(slot);
+			combo.SelectedIndex = 0;
+			if (selected.HasValue) {
+				for (int i = 0; i < combo.Items.Count; i++) {
+					if (combo.Items[i] is PieceOption opt && opt.Id == selected.Value) {
+						combo.SelectedIndex = i;
+						break;
+					}
+				}
+			}
+
+			combo.EndUpdate();
+		}
+
+		private static List<object> BuildOptions(LevelCatalog catalog, Slot slot, CustomSet model) {
 			HashSet<int> usedEnemiesElsewhere = new();
 			foreach (Slot other in new[] { Slot.P1, Slot.P2, Slot.P3 }) {
 				if (other == slot) {
@@ -446,13 +470,9 @@ namespace sa2_hunting_teacher {
 				_ => Array.Empty<int>()
 			};
 
-			ComboBox combo = row.GetCombo(slot);
-			combo.BeginUpdate();
-			combo.Items.Clear();
-			combo.Items.Add(SetEditor.None);
-
+			List<PieceOption> pieces = new();
 			foreach (int id in ownIds) {
-				combo.Items.Add(new PieceOption(id, catalog.HintFor(id)));
+				pieces.Add(new PieceOption(id, catalog.HintFor(id)));
 			}
 
 			foreach (int id in catalog.Enemies) {
@@ -460,21 +480,18 @@ namespace sa2_hunting_teacher {
 					continue;
 				}
 
-				combo.Items.Add(new PieceOption(id, catalog.HintFor(id)));
+				pieces.Add(new PieceOption(id, catalog.HintFor(id)));
 			}
 
-			int? selected = model.GetSlot(slot);
-			combo.SelectedIndex = 0;
-			if (selected.HasValue) {
-				for (int i = 0; i < combo.Items.Count; i++) {
-					if (combo.Items[i] is PieceOption opt && opt.Id == selected.Value) {
-						combo.SelectedIndex = i;
-						break;
-					}
-				}
+			pieces.Sort((a, b) => string.Compare(a.Hint, b.Hint, StringComparison.InvariantCultureIgnoreCase));
+
+			List<object> items = new();
+			items.Add(SetEditor.None);
+			foreach (PieceOption piece in pieces) {
+				items.Add(piece);
 			}
 
-			combo.EndUpdate();
+			return items;
 		}
 
 		private void OnRowComboChanged(DataRowControls row, Slot slot) {
