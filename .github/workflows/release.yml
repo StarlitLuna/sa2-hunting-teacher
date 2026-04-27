@@ -47,24 +47,7 @@ jobs:
 
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
-
-      - name: Install x86 .NET 8 desktop runtime
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = 'Stop'
-          $installDir = 'C:\Program Files (x86)\dotnet'
-          New-Item -ItemType Directory -Path $installDir -Force | Out-Null
-          $script = Join-Path $env:RUNNER_TEMP 'dotnet-install.ps1'
-          Invoke-WebRequest -Uri 'https://dot.net/v1/dotnet-install.ps1' -OutFile $script -UseBasicParsing
-          & $script -Architecture x86 -Channel 8.0 -Runtime windowsdesktop -InstallDir $installDir
-          $hostfxr = Get-ChildItem -Path (Join-Path $installDir 'host\fxr') -Filter 'hostfxr.dll' -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
-          if (-not $hostfxr) {
-            Write-Host "Install dir contents:"
-            Get-ChildItem -Recurse -Depth 3 $installDir | Select-Object -ExpandProperty FullName
-            throw "hostfxr.dll not found under $installDir after install"
-          }
-          Write-Host "x86 .NET runtime installed at: $($hostfxr.FullName)"
+          dotnet-version: '8.x'
 
       - uses: microsoft/setup-msbuild@v2
 
@@ -72,10 +55,13 @@ jobs:
         run: dotnet restore sa2-hunting-teacher.sln
 
       - name: Build tests
-        run: dotnet build unit-tests/unit-tests.csproj --configuration Release /p:Platform=x86 --no-restore
+        run: dotnet build unit-tests/unit-tests.csproj -c Release /p:Platform=x86 --no-restore
 
       - name: Run tests
-        run: dotnet test unit-tests/unit-tests.csproj --configuration Release --no-build /p:Platform=x86
+        shell: pwsh
+        run: |
+          [Environment]::SetEnvironmentVariable('DOTNET_ROOT(x86)', 'C:\Program Files (x86)\dotnet', 'Process')
+          dotnet test unit-tests/unit-tests.csproj -c Release /p:Platform=x86 --no-restore --no-build
 
       - name: Publish
         run: msbuild sa2-hunting-teacher/sa2-hunting-teacher.csproj /t:Publish /p:Configuration=Release /p:Platform=x86 /p:PublishProfile=FolderProfile
