@@ -158,6 +158,12 @@ public class WildCanyon(SA2Manager manager, byte repetitions) : HuntingLevel(man
 		{ Set.EnumKey(P3Id.TheBeginningRoom), "The beginning room." }
 	};
 
+	public static Dictionary<int, string> ImpossiblePieces { get; } = new Dictionary<int, string> {
+		{ Set.EnumKey(P2Id.UnderTheElbowLonelyImpossible), "Under the elbow. (lonely side)" }
+	};
+
+	public static LevelCatalog Catalog { get; } = LevelCatalog.Build<P1Id, P2Id, P3Id, EnemyId>(WildCanyon.PieceToHint, WildCanyon.ImpossiblePieces);
+
 	internal enum EnemyId {
 		SuspendedCeilingEnemy = 0x000A,
 		SandyPathRhino = 0x010A,

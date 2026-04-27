@@ -143,6 +143,10 @@ public class PumpkinHill(SA2Manager manager, byte repetitions) : HuntingLevel(ma
 		{ Set.EnumKey(P3Id.FlamingEmeralds), "Flaming Emeralds." }
 	};
 
+	public static Dictionary<int, string> ImpossiblePieces { get; } = new Dictionary<int, string>();
+
+	public static LevelCatalog Catalog { get; } = LevelCatalog.Build<P1Id, P2Id, P3Id, EnemyId>(PumpkinHill.PieceToHint, PumpkinHill.ImpossiblePieces);
+
 	internal enum EnemyId {
 		KingOfTheHill = 0x000A,
 		ThreeBrothersTombstone = 0x010A

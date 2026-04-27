@@ -41,6 +41,11 @@ public class Settings {
 	/// </summary>
 	public int Repititions { get; set; } = 3;
 
+	/// <summary>
+	/// User-authored custom sequences from the Set Editor.
+	/// </summary>
+	public List<PersistedSequence> CustomSequences { get; set; } = new();
+
 	public static readonly string AppDataPath = Path.Combine(
 		System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData),
 		"SA2 Hunting Teacher"
@@ -85,4 +90,16 @@ public class Settings {
 			JsonSerializer.Serialize<Settings>(this, Settings.JSONOptions)
 		);
 	}
+}
+
+public class PersistedSequence {
+	public string Name { get; set; } = "";
+	public Level Level { get; set; }
+	public List<PersistedSet> Sets { get; set; } = new();
+}
+
+public class PersistedSet {
+	public int P1Id { get; set; }
+	public int P2Id { get; set; }
+	public int P3Id { get; set; }
 }

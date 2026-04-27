@@ -143,6 +143,10 @@ public class AquaticMine(SA2Manager manager, byte repetitions) : HuntingLevel(ma
 		{ Set.EnumKey(P3Id.ChaseTheSkull), "Chase the skull!" }
 	};
 
+	public static Dictionary<int, string> ImpossiblePieces { get; } = new Dictionary<int, string>();
+
+	public static LevelCatalog Catalog { get; } = LevelCatalog.Build<P1Id, P2Id, P3Id, EnemyId>(AquaticMine.PieceToHint, AquaticMine.ImpossiblePieces);
+
 	internal enum EnemyId {
 		WaterLevel2HeightLeft = 0x000A,
 		WaterLevel2HeightRight = 0x010A,

@@ -135,6 +135,10 @@ public class MadSpace(SA2Manager manager, byte repetitions) : HuntingLevel(manag
 		{ Set.EnumKey(P3Id.VeryYellowPlatformStatic), "Very yellow platform (static)" }
 	};
 
+	public static Dictionary<int, string> ImpossiblePieces { get; } = new Dictionary<int, string>();
+
+	public static LevelCatalog Catalog { get; } = LevelCatalog.Build<P1Id, P2Id, P3Id, EnemyId>(MadSpace.PieceToHint, MadSpace.ImpossiblePieces);
+
 	internal enum EnemyId {
 		Watchman = 0x010A,
 		EvilLiquid = 0x020A,

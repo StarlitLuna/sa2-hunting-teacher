@@ -151,6 +151,10 @@ public class DryLagoon(SA2Manager manager, byte repetitions) : HuntingLevel(mana
 		{ Set.EnumKey(P3Id.ButterflysTreasure), "Butterfly's treasure." }
 	};
 
+	public static Dictionary<int, string> ImpossiblePieces { get; } = new Dictionary<int, string>();
+
+	public static LevelCatalog Catalog { get; } = LevelCatalog.Build<P1Id, P2Id, P3Id, EnemyId>(DryLagoon.PieceToHint, DryLagoon.ImpossiblePieces);
+
 	internal enum EnemyId {
 		GunsGuardForTheStorageArea = 0x050A,
 		ProtectorOfThePond = 0x060A,

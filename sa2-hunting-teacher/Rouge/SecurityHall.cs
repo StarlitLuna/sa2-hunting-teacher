@@ -163,6 +163,12 @@ public class SecurityHall(SA2Manager manager, byte repetitions) : HuntingLevel(m
 		{ Set.EnumKey(P3Id.TheNextOneIsEmptyC), "The next one is empty. (C)" }
 	};
 
+	public static Dictionary<int, string> ImpossiblePieces { get; } = new Dictionary<int, string> {
+		{ Set.EnumKey(P2Id.PlaceProtectedByLasersCenterImpossible), "A place which is protected by lasers. (center)" }
+	};
+
+	public static LevelCatalog Catalog { get; } = LevelCatalog.Build<P1Id, P2Id, P3Id, EnemyId>(SecurityHall.PieceToHint, SecurityHall.ImpossiblePieces);
+
 	internal enum EnemyId {
 		EveryoneSeenAtLeastOnceBefore = 0x000A,
 		LonelyAtWork = 0x010A,

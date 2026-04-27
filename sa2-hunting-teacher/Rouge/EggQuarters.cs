@@ -148,6 +148,12 @@ public class EggQuarters(SA2Manager manager, byte repetitions) : HuntingLevel(ma
 		{ Set.EnumKey(P3Id.UnderTheScorpion), "Under the scorpion." },
 	};
 
+	public static Dictionary<int, string> ImpossiblePieces { get; } = new Dictionary<int, string> {
+		{ Set.EnumKey(P2Id.UnderTheBellyImpossible), "Under the belly." }
+	};
+
+	public static LevelCatalog Catalog { get; } = LevelCatalog.Build<P1Id, P2Id, P3Id, EnemyId>(EggQuarters.PieceToHint, EggQuarters.ImpossiblePieces);
+
 	internal enum EnemyId {
 		YellowHeadRed = 0x000A,
 		RedWarriorRed = 0x010A,
