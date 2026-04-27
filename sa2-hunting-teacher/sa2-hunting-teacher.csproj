@@ -19,6 +19,7 @@
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <Copyright>$(Authors)</Copyright>
     <Platforms>x86</Platforms>
+    <RuntimeIdentifiers>win-x86</RuntimeIdentifiers>
     <BaseOutputPath>$(SolutionDir)bin\</BaseOutputPath>
 	<OutputPath>$(BaseOutputPath)$(Configuration)\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
