@@ -22,17 +22,6 @@ jobs:
         with:
           dotnet-version: '8.x'
 
-      - name: Install x86 .NET 8 runtimes
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = 'Stop'
-          $installDir = 'C:\Program Files (x86)\dotnet'
-          New-Item -ItemType Directory -Path $installDir -Force | Out-Null
-          $script = Join-Path $env:RUNNER_TEMP 'dotnet-install.ps1'
-          Invoke-WebRequest -Uri 'https://dot.net/v1/dotnet-install.ps1' -OutFile $script -UseBasicParsing
-          & $script -Architecture x86 -Channel 8.0 -Runtime dotnet -InstallDir $installDir
-          & $script -Architecture x86 -Channel 8.0 -Runtime windowsdesktop -InstallDir $installDir
-
       - uses: microsoft/setup-msbuild@v2
 
       - name: Restore
@@ -42,7 +31,10 @@ jobs:
         run: dotnet build unit-tests/unit-tests.csproj -c Release /p:Platform=x86 --no-restore
 
       - name: Run tests
-        run: dotnet test unit-tests/unit-tests.csproj -c Release /p:Platform=x86 --no-restore --no-build
+        shell: pwsh
+        run: |
+          [Environment]::SetEnvironmentVariable('DOTNET_ROOT(x86)', 'C:\Program Files (x86)\dotnet', 'Process')
+          dotnet test unit-tests/unit-tests.csproj -c Release /p:Platform=x86 --no-restore --no-build
 
       - name: Publish (verifies full release pipeline)
         run: msbuild sa2-hunting-teacher/sa2-hunting-teacher.csproj /t:Publish /p:Configuration=Release /p:Platform=x86 /p:PublishProfile=FolderProfile
