@@ -48,12 +48,16 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
-          architecture: x86
 
-      - name: Expose x86 runtime to test host
+      - name: Install x86 .NET 8 desktop runtime
         shell: pwsh
         run: |
-          "DOTNET_ROOT_X86=$env:DOTNET_INSTALL_DIR" | Out-File -FilePath $env:GITHUB_ENV -Append
+          $installDir = Join-Path $env:RUNNER_TEMP 'dotnet-x86'
+          New-Item -ItemType Directory -Path $installDir -Force | Out-Null
+          $script = Join-Path $env:RUNNER_TEMP 'dotnet-install.ps1'
+          Invoke-WebRequest -Uri 'https://dot.net/v1/dotnet-install.ps1' -OutFile $script
+          & $script -Architecture x86 -Channel 8.0 -Runtime windowsdesktop -InstallDir $installDir
+          "DOTNET_X86_ROOT=$installDir" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
       - uses: microsoft/setup-msbuild@v2
 
@@ -64,7 +68,11 @@ jobs:
         run: dotnet build unit-tests/unit-tests.csproj --configuration Release /p:Platform=x86 --no-restore
 
       - name: Run tests
-        run: dotnet test unit-tests/unit-tests.csproj --configuration Release --no-build /p:Platform=x86
+        shell: pwsh
+        run: |
+          [Environment]::SetEnvironmentVariable('DOTNET_ROOT(x86)', $env:DOTNET_X86_ROOT, 'Process')
+          [Environment]::SetEnvironmentVariable('DOTNET_ROOT_X86', $env:DOTNET_X86_ROOT, 'Process')
+          dotnet test unit-tests/unit-tests.csproj --configuration Release --no-build /p:Platform=x86
 
       - name: Publish
         run: msbuild sa2-hunting-teacher/sa2-hunting-teacher.csproj /t:Publish /p:Configuration=Release /p:Platform=x86 /p:PublishProfile=FolderProfile
