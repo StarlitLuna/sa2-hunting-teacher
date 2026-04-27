@@ -1,0 +1,95 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      should_release: ${{ steps.cmp.outputs.should_release }}
+      version: ${{ steps.cmp.outputs.version }}
+      tag: ${{ steps.cmp.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - id: cmp
+        shell: bash
+        run: |
+          version=$(grep -oP '(?<=<Version>)[^<]+' sa2-hunting-teacher/sa2-hunting-teacher.csproj | head -n1)
+          if [ -z "$version" ]; then
+            echo "Could not read <Version> from csproj." >&2
+            exit 1
+          fi
+          tag="v$version"
+          latest=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          if [ "$tag" != "$latest" ]; then
+            echo "should_release=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+          fi
+          echo "current=$tag latest=$latest"
+
+  release:
+    needs: check
+    if: needs.check.outputs.should_release == 'true'
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - uses: microsoft/setup-msbuild@v2
+
+      - name: Restore
+        run: dotnet restore sa2-hunting-teacher.sln
+
+      - name: Build
+        run: msbuild sa2-hunting-teacher.sln /p:Configuration=Release /p:Platform=x86 /m
+
+      - name: Test
+        run: dotnet test unit-tests/unit-tests.csproj --configuration Release --no-build /p:Platform=x86
+
+      - name: Publish
+        run: msbuild sa2-hunting-teacher/sa2-hunting-teacher.csproj /t:Publish /p:Configuration=Release /p:Platform=x86 /p:PublishProfile=FolderProfile
+
+      - name: Package
+        shell: pwsh
+        run: |
+          $publishDir = 'bin/Publish'
+          $files = @('sa2-hunting-teacher.exe', 'hunting-teacher.helper.dll')
+          foreach ($f in $files) {
+            $p = Join-Path $publishDir $f
+            if (-not (Test-Path $p)) {
+              throw "Expected publish artifact missing: $p"
+            }
+          }
+          $archive = (Resolve-Path '.').Path + '\sa2-hunting-teacher.7z'
+          if (Test-Path $archive) { Remove-Item $archive -Force }
+          Push-Location $publishDir
+          try {
+            7z a -t7z -mx=9 $archive @files
+          } finally {
+            Pop-Location
+          }
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.check.outputs.tag }}
+          name: ${{ needs.check.outputs.tag }}
+          target_commitish: ${{ github.sha }}
+          files: sa2-hunting-teacher.7z
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

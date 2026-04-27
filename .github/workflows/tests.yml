@@ -1,0 +1,30 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - uses: microsoft/setup-msbuild@v2
+
+      - name: Restore
+        run: dotnet restore sa2-hunting-teacher.sln
+
+      - name: Build
+        run: msbuild sa2-hunting-teacher.sln /p:Configuration=Release /p:Platform=x86 /m
+
+      - name: Test
+        run: dotnet test unit-tests/unit-tests.csproj --configuration Release --no-build /p:Platform=x86
