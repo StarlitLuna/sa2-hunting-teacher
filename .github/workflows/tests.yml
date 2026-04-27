@@ -23,11 +23,6 @@ jobs:
           dotnet-version: '8.0.x'
           architecture: x86
 
-      - name: Expose x86 runtime to test host
-        shell: pwsh
-        run: |
-          "DOTNET_ROOT_X86=$env:DOTNET_INSTALL_DIR" | Out-File -FilePath $env:GITHUB_ENV -Append
-
       - uses: microsoft/setup-msbuild@v2
 
       - name: Restore
@@ -37,7 +32,16 @@ jobs:
         run: dotnet build unit-tests/unit-tests.csproj --configuration Release /p:Platform=x86 --no-restore
 
       - name: Run tests
-        run: dotnet test unit-tests/unit-tests.csproj --configuration Release --no-build /p:Platform=x86
+        shell: pwsh
+        run: |
+          if (-not $env:DOTNET_INSTALL_DIR) {
+            throw "DOTNET_INSTALL_DIR is not set; setup-dotnet@v4 did not export it."
+          }
+          $x86Root = $env:DOTNET_INSTALL_DIR
+          Write-Host "Pointing x86 host resolution at: $x86Root"
+          [Environment]::SetEnvironmentVariable('DOTNET_ROOT_X86', $x86Root, 'Process')
+          [Environment]::SetEnvironmentVariable('DOTNET_ROOT(x86)', $x86Root, 'Process')
+          dotnet test unit-tests/unit-tests.csproj --configuration Release --no-build /p:Platform=x86
 
       - name: Publish (verifies full release pipeline)
         run: msbuild sa2-hunting-teacher/sa2-hunting-teacher.csproj /t:Publish /p:Configuration=Release /p:Platform=x86 /p:PublishProfile=FolderProfile
