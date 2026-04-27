@@ -80,6 +80,19 @@ more beneficial or learning as the hints would actually appear in a real run fro
 is more beneficial is entirely left up to the player to decide. Everyone is different and I'm aware of some people preferring one method
 while others would prefer the other method. Give it a try for yourself and see which you prefer!
 
+#### Set Editor
+
+Aside from the predefined level options that allow you to play a curated sequence of sets for the purpose of learning the game's pieces,
+you also have the option of creating your own entirely custom sequence(s) as you desire with any number of sets and any combination of pieces!
+To do this, there's a set editor button next to the level selection dropdown that opens up a form that allows you to add sequences. In each
+sequence you can define as many sets as you want via the intuitive UI. All possible pieces that exist in the game are selectable. Even ones
+that don't naturally spawn in the game due to the set generation logic.
+
+Once you're done creating your custom sequence(s) you can save your work and close out the editor. For each sequence you add,
+you'll see your new sequence appear in the level selection dropdown under the "Custom" group. Simply select that and start your sequence
+as normal then enter the level you configured that sequence to be for in game and you'll be able to play out your custom practice sequence
+with as many repititions as you configure!
+
 ## License
 
 This project is licensed under the [GPL v3.0] License - see the LICENSE file for details
