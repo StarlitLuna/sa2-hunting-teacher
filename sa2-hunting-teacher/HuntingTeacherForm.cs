@@ -13,9 +13,10 @@ public partial class HuntingTeacherForm : Form {
 		this.Text += " - v" + Application.ProductVersion;
 		this.updateManager = new UpdateManager(this);
 		HuntingTeacherForm.CurrentLogBox = this.logBox;
-		SupportedLevels.Configure(this.levelSelector, Level.WildCanyon);
 
 		this.settings = Settings.Load();
+		SupportedLevels.Configure(this.levelSelector, this.settings.CustomSequences, Level.WildCanyon);
+
 		InitializeSettings();
 		InitializeTooltips();
 
@@ -137,7 +138,9 @@ public partial class HuntingTeacherForm : Form {
 	}
 
 	private void setEditor_Click(object sender, EventArgs e) {
+		Level? previousLevel = this.levelSelector.SelectedValue as Level?;
 		SetEditor editorForm = new(this.settings);
 		editorForm.ShowDialog(this);
+		SupportedLevels.Configure(this.levelSelector, this.settings.CustomSequences, previousLevel);
 	}
 }
