@@ -20,9 +20,9 @@ jobs:
 
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '8.x'
 
-      - name: Install x86 .NET 8 desktop runtime
+      - name: Install x86 .NET 8 runtimes
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
@@ -30,14 +30,8 @@ jobs:
           New-Item -ItemType Directory -Path $installDir -Force | Out-Null
           $script = Join-Path $env:RUNNER_TEMP 'dotnet-install.ps1'
           Invoke-WebRequest -Uri 'https://dot.net/v1/dotnet-install.ps1' -OutFile $script -UseBasicParsing
+          & $script -Architecture x86 -Channel 8.0 -Runtime dotnet -InstallDir $installDir
           & $script -Architecture x86 -Channel 8.0 -Runtime windowsdesktop -InstallDir $installDir
-          $hostfxr = Get-ChildItem -Path (Join-Path $installDir 'host\fxr') -Filter 'hostfxr.dll' -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
-          if (-not $hostfxr) {
-            Write-Host "Install dir contents:"
-            Get-ChildItem -Recurse -Depth 3 $installDir | Select-Object -ExpandProperty FullName
-            throw "hostfxr.dll not found under $installDir after install"
-          }
-          Write-Host "x86 .NET runtime installed at: $($hostfxr.FullName)"
 
       - uses: microsoft/setup-msbuild@v2
 
@@ -45,48 +39,10 @@ jobs:
         run: dotnet restore sa2-hunting-teacher.sln
 
       - name: Build tests
-        run: dotnet build unit-tests/unit-tests.csproj --configuration Release /p:Platform=x86 --no-restore
+        run: dotnet build unit-tests/unit-tests.csproj -c Release /p:Platform=x86 --no-restore
 
       - name: Run tests
-        shell: pwsh
-        run: |
-          [Environment]::SetEnvironmentVariable('DOTNET_ROOT(x86)', 'C:\Program Files (x86)\dotnet', 'Process')
-
-          Write-Host '=== x86 .NET host resolution inputs ==='
-          Write-Host "DOTNET_ROOT                = $env:DOTNET_ROOT"
-          Write-Host "DOTNET_ROOT(x86)           = $([Environment]::GetEnvironmentVariable('DOTNET_ROOT(x86)'))"
-          Write-Host "DOTNET_ROOT_X86            = $env:DOTNET_ROOT_X86"
-
-          $regPaths = @(
-            'HKLM:\SOFTWARE\dotnet\Setup\InstalledVersions\x86',
-            'HKLM:\SOFTWARE\WOW6432Node\dotnet\Setup\InstalledVersions\x86'
-          )
-          foreach ($p in $regPaths) {
-            if (Test-Path $p) {
-              $loc = (Get-ItemProperty -Path $p -Name InstallLocation -ErrorAction SilentlyContinue).InstallLocation
-              Write-Host "Registry: $p\InstallLocation = $loc"
-            } else {
-              Write-Host "Registry: $p  (absent)"
-            }
-          }
-
-          $x86Dir = 'C:\Program Files (x86)\dotnet'
-          Write-Host ""
-          Write-Host "=== contents of $x86Dir\host\fxr ==="
-          if (Test-Path "$x86Dir\host\fxr") {
-            Get-ChildItem "$x86Dir\host\fxr" | ForEach-Object { Write-Host "  $($_.Name)" }
-          } else {
-            Write-Host "  (missing)"
-          }
-          Write-Host "=== contents of $x86Dir\shared ==="
-          if (Test-Path "$x86Dir\shared") {
-            Get-ChildItem "$x86Dir\shared" -Recurse -Depth 1 | Select-Object -ExpandProperty FullName | ForEach-Object { Write-Host "  $_" }
-          } else {
-            Write-Host "  (missing)"
-          }
-          Write-Host '======================================='
-
-          dotnet test unit-tests/unit-tests.csproj --configuration Release --no-build /p:Platform=x86
+        run: dotnet test unit-tests/unit-tests.csproj -c Release /p:Platform=x86 --no-restore --no-build
 
       - name: Publish (verifies full release pipeline)
         run: msbuild sa2-hunting-teacher/sa2-hunting-teacher.csproj /t:Publish /p:Configuration=Release /p:Platform=x86 /p:PublishProfile=FolderProfile
