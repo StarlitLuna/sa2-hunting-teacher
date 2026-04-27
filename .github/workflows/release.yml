@@ -54,10 +54,10 @@ jobs:
       - name: Restore
         run: dotnet restore sa2-hunting-teacher.sln
 
-      - name: Build
-        run: msbuild sa2-hunting-teacher.sln /p:Configuration=Release /p:Platform=x86 /m
+      - name: Build tests
+        run: dotnet build unit-tests/unit-tests.csproj --configuration Release /p:Platform=x86 --no-restore
 
-      - name: Test
+      - name: Run tests
         run: dotnet test unit-tests/unit-tests.csproj --configuration Release --no-build /p:Platform=x86
 
       - name: Publish
