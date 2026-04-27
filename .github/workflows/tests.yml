@@ -31,9 +31,6 @@ jobs:
           $script = Join-Path $env:RUNNER_TEMP 'dotnet-install.ps1'
           Invoke-WebRequest -Uri 'https://dot.net/v1/dotnet-install.ps1' -OutFile $script -UseBasicParsing
           & $script -Architecture x86 -Channel 8.0 -Runtime windowsdesktop -InstallDir $installDir
-          if ($LASTEXITCODE -ne 0) {
-            throw "dotnet-install.ps1 exited with code $LASTEXITCODE"
-          }
           $hostfxr = Get-ChildItem -Path (Join-Path $installDir 'host\fxr') -Filter 'hostfxr.dll' -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
           if (-not $hostfxr) {
             Write-Host "Install dir contents:"
