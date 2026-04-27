@@ -7,6 +7,7 @@ namespace sa2_hunting_teacher {
 		}
 
 		private sealed class CustomSequence {
+			public long Id;
 			public string Name = "";
 			public Level? Level;
 			public List<CustomSet> Sets = new();
@@ -111,6 +112,7 @@ namespace sa2_hunting_teacher {
 
 		private static CustomSequence FromPersisted(PersistedSequence sequence) {
 			CustomSequence seq = new() {
+				Id = sequence.Id,
 				Name = sequence.Name,
 				Level = sequence.Level
 			};
@@ -128,6 +130,7 @@ namespace sa2_hunting_teacher {
 
 		private static PersistedSequence ToPersisted(CustomSequence seq) {
 			PersistedSequence sequence = new() {
+				Id = seq.Id,
 				Name = seq.Name,
 				Level = seq.Level!.Value
 			};
@@ -198,8 +201,10 @@ namespace sa2_hunting_teacher {
 
 		private void addSequence_Click(object sender, EventArgs e) {
 			CustomSequence seq = new() {
+				Id = this.settings.NextSequenceId++,
 				Name = $"Sequence {this.sequences.Count + 1}"
 			};
+
 			this.sequences.Add(seq);
 			ListViewItem item = new(seq.Name);
 			this.customSequences.Items.Add(item);

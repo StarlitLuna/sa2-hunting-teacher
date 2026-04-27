@@ -46,6 +46,12 @@ public class Settings {
 	/// </summary>
 	public List<PersistedSequence> CustomSequences { get; set; } = new();
 
+	/// <summary>
+	/// Monotonically increasing identifier handed out to each newly-added custom sequence.
+	/// Starts at <c>1</c> and is never decremented even when sequences are deleted.
+	/// </summary>
+	public long NextSequenceId { get; set; } = 1;
+
 	public static readonly string AppDataPath = Path.Combine(
 		System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData),
 		"SA2 Hunting Teacher"
@@ -93,6 +99,7 @@ public class Settings {
 }
 
 public class PersistedSequence {
+	public long Id { get; set; }
 	public string Name { get; set; } = "";
 	public Level Level { get; set; }
 	public List<PersistedSet> Sets { get; set; } = new();

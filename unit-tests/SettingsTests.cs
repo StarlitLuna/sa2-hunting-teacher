@@ -52,6 +52,7 @@ public class SettingsTests : IDisposable {
 		Assert.Equal(3, settings.Repititions);
 		Assert.NotNull(settings.CustomSequences);
 		Assert.Empty(settings.CustomSequences);
+		Assert.Equal(1L, settings.NextSequenceId);
 	}
 
 	[Fact]
@@ -131,7 +132,9 @@ public class SettingsTests : IDisposable {
 		settings.TimerReset = false;
 		settings.RepititionsInPlace = true;
 		settings.Repititions = 11;
+		settings.NextSequenceId = 42;
 		settings.CustomSequences.Add(new PersistedSequence {
+			Id = 7,
 			Name = "Test",
 			Level = Level.WildCanyon,
 			Sets = [new PersistedSet { P1Id = 1, P2Id = 2, P3Id = 3 }],
@@ -146,7 +149,9 @@ public class SettingsTests : IDisposable {
 		Assert.Contains("\"RepititionsInPlace\": true", json);
 		Assert.Contains("\"Repititions\": 11", json);
 		Assert.Contains("\"CustomSequences\":", json);
+		Assert.Contains("\"Id\": 7", json);
 		Assert.Contains("\"Name\": \"Test\"", json);
+		Assert.Contains("\"NextSequenceId\": 42", json);
 	}
 
 	#endregion
@@ -198,8 +203,10 @@ public class SettingsTests : IDisposable {
 				"TimerReset": false,
 				"RepititionsInPlace": true,
 				"Repititions": 13,
+				"NextSequenceId": 99,
 				"CustomSequences": [
 					{
+						"Id": 4,
 						"Name": "Loaded",
 						"Level": 0,
 						"Sets": [
@@ -218,7 +225,9 @@ public class SettingsTests : IDisposable {
 		Assert.False(result.TimerReset);
 		Assert.True(result.RepititionsInPlace);
 		Assert.Equal(13, result.Repititions);
+		Assert.Equal(99L, result.NextSequenceId);
 		Assert.Single(result.CustomSequences);
+		Assert.Equal(4L, result.CustomSequences[0].Id);
 		Assert.Equal("Loaded", result.CustomSequences[0].Name);
 		Assert.Equal(Level.WildCanyon, result.CustomSequences[0].Level);
 		Assert.Single(result.CustomSequences[0].Sets);
@@ -309,7 +318,9 @@ public class SettingsTests : IDisposable {
 		original.TimerReset = false;
 		original.RepititionsInPlace = true;
 		original.Repititions = 17;
+		original.NextSequenceId = 1234567890123L;
 		original.CustomSequences.Add(new PersistedSequence {
+			Id = 1234567890122L,
 			Name = "Round Trip",
 			Level = Level.MadSpace,
 			Sets = [
@@ -326,7 +337,9 @@ public class SettingsTests : IDisposable {
 		Assert.Equal(original.TimerReset, loaded.TimerReset);
 		Assert.Equal(original.RepititionsInPlace, loaded.RepititionsInPlace);
 		Assert.Equal(original.Repititions, loaded.Repititions);
+		Assert.Equal(original.NextSequenceId, loaded.NextSequenceId);
 		Assert.Equal(original.CustomSequences.Count, loaded.CustomSequences.Count);
+		Assert.Equal(original.CustomSequences[0].Id, loaded.CustomSequences[0].Id);
 		Assert.Equal(original.CustomSequences[0].Name, loaded.CustomSequences[0].Name);
 		Assert.Equal(original.CustomSequences[0].Level, loaded.CustomSequences[0].Level);
 		Assert.Equal(original.CustomSequences[0].Sets.Count, loaded.CustomSequences[0].Sets.Count);
@@ -343,6 +356,7 @@ public class SettingsTests : IDisposable {
 	public void PersistedSequence_DefaultsToEmptyNameAndEmptySets() {
 		PersistedSequence seq = new();
 
+		Assert.Equal(0L, seq.Id);
 		Assert.Equal("", seq.Name);
 		Assert.NotNull(seq.Sets);
 		Assert.Empty(seq.Sets);
@@ -375,6 +389,7 @@ public class SettingsTests : IDisposable {
 		Assert.Equal(3, settings.Repititions);
 		Assert.NotNull(settings.CustomSequences);
 		Assert.Empty(settings.CustomSequences);
+		Assert.Equal(1L, settings.NextSequenceId);
 	}
 
 	private static void EnsureAppDataDir() {
