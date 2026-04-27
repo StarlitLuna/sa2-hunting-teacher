@@ -50,6 +50,11 @@ jobs:
           dotnet-version: '8.0.x'
           architecture: x86
 
+      - name: Expose x86 runtime to test host
+        shell: pwsh
+        run: |
+          "DOTNET_ROOT_X86=$env:DOTNET_INSTALL_DIR" | Out-File -FilePath $env:GITHUB_ENV -Append
+
       - uses: microsoft/setup-msbuild@v2
 
       - name: Restore
