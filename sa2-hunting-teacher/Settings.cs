@@ -91,10 +91,7 @@ public class Settings {
 	}
 
 	public void Save() {
-		if (!Path.Exists(Settings.AppDataPath)) {
-			Directory.CreateDirectory(Settings.AppDataPath);
-		}
-
+		Directory.CreateDirectory(Settings.AppDataPath);
 		File.WriteAllText(
 			Settings.SettingsPath,
 			JsonSerializer.Serialize<Settings>(this, Settings.JSONOptions)
