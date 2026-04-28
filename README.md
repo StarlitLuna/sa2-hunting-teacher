@@ -61,6 +61,7 @@ When enabled, each set will repeat the number of repetitions you configure befor
 the number of repetitions you have configured. This option is to help re-enforce your learning in whichever way you feel would be more conducive towards memorizing the information.
 
 e.g. with Repetitions in Place off (default) and 3 repetitions: A -> B -> C -> A -> B -> C -> A -> B -> C -> End
+
 e.g. with Repetitions in Place on and 3 repetitions:            A -> A -> A -> B -> B -> B -> C -> C -> C -> End
 
 Once a sequence is complete the tool will automatically reset itself to allow you to train in other levels.
