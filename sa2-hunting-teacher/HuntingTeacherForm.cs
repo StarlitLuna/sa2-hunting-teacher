@@ -27,8 +27,8 @@ public partial class HuntingTeacherForm : Form {
 		this.mspReverseHints.Checked = this.settings.MspReversedHints;
 		this.backToMenu.Checked = this.settings.BackToMenu;
 		this.timerReset.Checked = this.settings.TimerReset;
-		this.inPlaceRepititions.Checked = this.settings.RepititionsInPlace;
-		this.repetitions.Value = this.settings.Repititions;
+		this.inPlaceRepetitions.Checked = this.settings.RepetitionsInPlace;
+		this.repetitions.Value = this.settings.Repetitions;
 	}
 
 	private void InitializeTooltips() {
@@ -51,10 +51,10 @@ public partial class HuntingTeacherForm : Form {
 			"This setting does nothing when 'Back To Menu' is enabled"
 		);
 
-		this.inPlaceRepititionsTooltip.SetToolTip(
-			this.inPlaceRepititions,
-			"When enabled, you will play a set a 'repitition' number of times before proceeding to the next set\n" +
-			"When disabled, you will play a set once, proceed to the next set, then the sequence will repeat a 'repitition' number of times"
+		this.inPlaceRepetitionsTooltip.SetToolTip(
+			this.inPlaceRepetitions,
+			"When enabled, you will play a set a 'repetition' number of times before proceeding to the next set\n" +
+			"When disabled, you will play a set once, proceed to the next set, then the sequence will repeat a 'repetition' number of times"
 		);
 	}
 
@@ -62,8 +62,8 @@ public partial class HuntingTeacherForm : Form {
 		this.settings.MspReversedHints = this.mspReverseHints.Checked;
 		this.settings.BackToMenu = this.backToMenu.Checked;
 		this.settings.TimerReset = this.timerReset.Checked;
-		this.settings.RepititionsInPlace = this.inPlaceRepititions.Checked;
-		this.settings.Repititions = (byte)this.repetitions.Value;
+		this.settings.RepetitionsInPlace = this.inPlaceRepetitions.Checked;
+		this.settings.Repetitions = (byte)this.repetitions.Value;
 		this.settings.Save();
 	}
 
@@ -86,8 +86,8 @@ public partial class HuntingTeacherForm : Form {
 		return this.timerReset.Checked;
 	}
 
-	public bool RepititionsInPlace() {
-		return this.inPlaceRepititions.Checked;
+	public bool RepetitionsInPlace() {
+		return this.inPlaceRepetitions.Checked;
 	}
 
 	private void StartBtn_Click(object sender, EventArgs e) {
@@ -97,12 +97,12 @@ public partial class HuntingTeacherForm : Form {
 		this.mspReverseHints.Enabled = false;
 		this.backToMenu.Enabled = false;
 		this.timerReset.Enabled = false;
-		this.inPlaceRepititions.Enabled = false;
+		this.inPlaceRepetitions.Enabled = false;
 		this.resetBtn.Enabled = true;
 
 		Task.Run(() => {
 			try {
-				SA2Manager.Start(selectedLevel, (byte)this.repetitions.Value, this, this.inPlaceRepititions.Checked);
+				SA2Manager.Start(selectedLevel, (byte)this.repetitions.Value, this, this.inPlaceRepetitions.Checked);
 			} catch (ArgumentException) {
 				this.Invoke(() => {
 					MessageBox.Show(this, "A running instance of SA2 could not be found.\n" +
@@ -121,7 +121,7 @@ public partial class HuntingTeacherForm : Form {
 		this.mspReverseHints.Enabled = this.ShouldEnableMspReverseHints();
 		this.backToMenu.Enabled = true;
 		this.timerReset.Enabled = true;
-		this.inPlaceRepititions.Enabled = true;
+		this.inPlaceRepetitions.Enabled = true;
 		this.startBtn.Enabled = true;
 	}
 

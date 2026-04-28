@@ -30,7 +30,7 @@ public class SA2ManagerTests : IDisposable {
 
 		this.sa2 = (SA2Manager)RuntimeHelpers.GetUninitializedObject(typeof(SA2Manager));
 		Reflect.SetField(this.sa2, "sharedMemory", this.accessor);
-		Reflect.SetField(this.sa2, "repititionsInPlace", false);
+		Reflect.SetField(this.sa2, "repetitionsInPlace", false);
 	}
 
 	public void Dispose() {
@@ -234,9 +234,9 @@ public class SA2ManagerTests : IDisposable {
 	[Theory]
 	[InlineData(true)]
 	[InlineData(false)]
-	public void RepititionsInPlace_ReturnsBackingField(bool value) {
-		Reflect.SetField(this.sa2, "repititionsInPlace", value);
-		Assert.Equal(value, this.sa2.RepititionsInPlace());
+	public void RepetitionsInPlace_ReturnsBackingField(bool value) {
+		Reflect.SetField(this.sa2, "repetitionsInPlace", value);
+		Assert.Equal(value, this.sa2.RepetitionsInPlace());
 	}
 
 	#endregion

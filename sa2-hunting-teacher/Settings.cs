@@ -28,18 +28,18 @@ public class Settings {
 	public bool TimerReset { get; set; } = true;
 
 	/// <summary>
-	/// Whether or not repititions happen at the end of a sequence or in place per set.
+	/// Whether or not repetitions happen at the end of a sequence or in place per set.
 	/// When true (i.e. checked), you will play the same set x times before proceeding to the next set.
 	/// When false (i.e. not checked), you will play one set at a time and the sequence itself will repeat x times.
 	/// Defaults to <c>false</c>.
 	/// </summary>
-	public bool RepititionsInPlace { get; set; } = false;
+	public bool RepetitionsInPlace { get; set; } = false;
 
 	/// <summary>
-	/// The number of repititions to play in a sequence.
+	/// The number of repetitions to play in a sequence.
 	/// Defaults to <c>3</c>.
 	/// </summary>
-	public int Repititions { get; set; } = 3;
+	public int Repetitions { get; set; } = 3;
 
 	/// <summary>
 	/// User-authored custom sequences from the Set Editor.

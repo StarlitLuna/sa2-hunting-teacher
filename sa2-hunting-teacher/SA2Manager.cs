@@ -18,10 +18,10 @@ public partial class SA2Manager : IDisposable {
 	private readonly HuntingLevel level;
 	private readonly HuntingTeacherForm teacherForm;
 	private readonly MemoryMappedViewAccessor sharedMemory;
-	private readonly bool repititionsInPlace;
+	private readonly bool repetitionsInPlace;
 	private HunterTeacherData HunterTeacherData;
 
-	private SA2Manager(LevelRow selection, byte repetitions, HuntingTeacherForm teacherForm, bool repititionsInPlace) {
+	private SA2Manager(LevelRow selection, byte repetitions, HuntingTeacherForm teacherForm, bool repetitionsInPlace) {
 		this.teacherForm = teacherForm;
 		this.level = selection.Level switch {
 			Level.WildCanyon => new WildCanyon(this, repetitions),
@@ -66,7 +66,7 @@ public partial class SA2Manager : IDisposable {
 			MemoryMappedFileAccess.ReadWrite
 		);
 
-		this.repititionsInPlace = repititionsInPlace;
+		this.repetitionsInPlace = repetitionsInPlace;
 		this.sharedMemory = SA2Manager.MemoryMapper.CreateViewAccessor();
 		this.ApplyDataDefaults(this.level.LevelId, teacherForm.MspReversedHints(), teacherForm.BackToMenu(), teacherForm.TimerReset());
 		this.InjectDll();
@@ -109,8 +109,8 @@ public partial class SA2Manager : IDisposable {
 		return false;
 	}
 
-	public bool RepititionsInPlace() {
-		return this.repititionsInPlace;
+	public bool RepetitionsInPlace() {
+		return this.repetitionsInPlace;
 	}
 
 	public void LogMessage(string msg) {
@@ -183,10 +183,10 @@ public partial class SA2Manager : IDisposable {
 		this.CloseResource();
 	}
 
-	public static void Start(LevelRow selection, byte repetitions, HuntingTeacherForm teacherForm, bool repititionsInPlace) {
+	public static void Start(LevelRow selection, byte repetitions, HuntingTeacherForm teacherForm, bool repetitionsInPlace) {
 		SA2Manager.CanRun = true;
 		 
-		using (SA2Manager instance = new(selection, repetitions, teacherForm, repititionsInPlace)) {
+		using (SA2Manager instance = new(selection, repetitions, teacherForm, repetitionsInPlace)) {
 			while (SA2Manager.CanRun && !instance.level.SequenceComplete() && !instance.targetProcess.HasExited) {
 				instance.sharedMemory.Read(0, out instance.HunterTeacherData);
 				instance.level.RunSequence();

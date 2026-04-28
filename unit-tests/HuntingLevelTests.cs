@@ -29,7 +29,7 @@ public class HuntingLevelTests : IDisposable {
 
 		this.sa2 = (SA2Manager)RuntimeHelpers.GetUninitializedObject(typeof(SA2Manager));
 		Reflect.SetField(this.sa2, "sharedMemory", this.accessor);
-		Reflect.SetField(this.sa2, "repititionsInPlace", false);
+		Reflect.SetField(this.sa2, "repetitionsInPlace", false);
 	}
 
 	public void Dispose() {
@@ -160,7 +160,7 @@ public class HuntingLevelTests : IDisposable {
 	[Fact]
 	public void RunSequence_StandardMode_WrapsToZeroAfterLastSet() {
 		TestLevel level = this.CreateLevel(2, 3);
-		Reflect.SetField(this.sa2, "repititionsInPlace", false);
+		Reflect.SetField(this.sa2, "repetitionsInPlace", false);
 		SetSequenceCount(level, 100);
 		SetNext(level, 2);
 		this.SetState(inWin: true, levelLoading: false);
@@ -174,7 +174,7 @@ public class HuntingLevelTests : IDisposable {
 	[Fact]
 	public void RunSequence_StandardMode_AdvancesOneStepAtATime() {
 		TestLevel level = this.CreateLevel(2, 4);
-		Reflect.SetField(this.sa2, "repititionsInPlace", false);
+		Reflect.SetField(this.sa2, "repetitionsInPlace", false);
 		SetSequenceCount(level, 100);
 		SetNext(level, 1);
 		this.SetState(inWin: true, levelLoading: false);
@@ -192,7 +192,7 @@ public class HuntingLevelTests : IDisposable {
 			Reflect.SetField(this.sa2, "teacherForm", form);
 
 			TestLevel level = this.CreateLevel(3, 3);
-			Reflect.SetField(this.sa2, "repititionsInPlace", false);
+			Reflect.SetField(this.sa2, "repetitionsInPlace", false);
 			this.SetState(inWin: true, levelLoading: false);
 			TextBox logBox = ClearLogBox();
 
@@ -210,7 +210,7 @@ public class HuntingLevelTests : IDisposable {
 			Reflect.SetField(this.sa2, "teacherForm", form);
 
 			TestLevel level = this.CreateLevel(3, 3);
-			Reflect.SetField(this.sa2, "repititionsInPlace", false);
+			Reflect.SetField(this.sa2, "repetitionsInPlace", false);
 			SetSequenceCount(level, 3);
 			SetNext(level, 2);
 			this.SetState(inWin: true, levelLoading: false);
@@ -227,61 +227,61 @@ public class HuntingLevelTests : IDisposable {
 	#region RunSequence — in-place repetition mode
 
 	[Fact]
-	public void RunSequence_RepititionsInPlace_RepeatsCurrentSetUntilRepsExhausted() {
+	public void RunSequence_RepetitionsInPlace_RepeatsCurrentSetUntilRepsExhausted() {
 		TestLevel level = this.CreateLevel(2, 3);
-		Reflect.SetField(this.sa2, "repititionsInPlace", true);
+		Reflect.SetField(this.sa2, "repetitionsInPlace", true);
 		SetSequenceCount(level, 100);
 		SetNext(level, 0);
-		SetRepitition(level, 0);
+		SetRepetition(level, 0);
 		this.SetState(inWin: true, levelLoading: false);
 
 		level.RunSequence();
 
 		Assert.Equal(0x1000, this.GetData().p1Id);
 		Assert.Equal(0, GetNext(level));
-		Assert.Equal((byte)1, GetRepitition(level));
+		Assert.Equal((byte)1, GetRepetition(level));
 	}
 
 	[Fact]
-	public void RunSequence_RepititionsInPlace_AdvancesAfterAllRepetitionsForCurrentSet() {
+	public void RunSequence_RepetitionsInPlace_AdvancesAfterAllRepetitionsForCurrentSet() {
 		TestLevel level = this.CreateLevel(2, 3);
-		Reflect.SetField(this.sa2, "repititionsInPlace", true);
+		Reflect.SetField(this.sa2, "repetitionsInPlace", true);
 		SetSequenceCount(level, 100);
 		SetNext(level, 0);
-		SetRepitition(level, 1);
+		SetRepetition(level, 1);
 		this.SetState(inWin: true, levelLoading: false);
 
 		level.RunSequence();
 
 		Assert.Equal(0x1001, this.GetData().p1Id);
 		Assert.Equal(1, GetNext(level));
-		Assert.Equal((byte)0, GetRepitition(level));
+		Assert.Equal((byte)0, GetRepetition(level));
 	}
 
 	[Fact]
-	public void RunSequence_RepititionsInPlace_WrapsToFirstSetAfterLastSetCompleted() {
+	public void RunSequence_RepetitionsInPlace_WrapsToFirstSetAfterLastSetCompleted() {
 		TestLevel level = this.CreateLevel(2, 3);
-		Reflect.SetField(this.sa2, "repititionsInPlace", true);
+		Reflect.SetField(this.sa2, "repetitionsInPlace", true);
 		SetSequenceCount(level, 100);
 		SetNext(level, 2);
-		SetRepitition(level, 1);
+		SetRepetition(level, 1);
 		this.SetState(inWin: true, levelLoading: false);
 
 		level.RunSequence();
 
 		Assert.Equal(0x1000, this.GetData().p1Id);
 		Assert.Equal(0, GetNext(level));
-		Assert.Equal((byte)0, GetRepitition(level));
+		Assert.Equal((byte)0, GetRepetition(level));
 	}
 
 	[Fact]
-	public void RunSequence_RepititionsInPlace_LogsRepetitionPlusOneAsCurrentRep() {
+	public void RunSequence_RepetitionsInPlace_LogsRepetitionPlusOneAsCurrentRep() {
 		StaHelper.RunSta(() => {
 			using HuntingTeacherForm form = BuildForm();
 			Reflect.SetField(this.sa2, "teacherForm", form);
 
 			TestLevel level = this.CreateLevel(3, 3);
-			Reflect.SetField(this.sa2, "repititionsInPlace", true);
+			Reflect.SetField(this.sa2, "repetitionsInPlace", true);
 			this.SetState(inWin: true, levelLoading: false);
 			TextBox logBox = ClearLogBox();
 
@@ -298,7 +298,7 @@ public class HuntingLevelTests : IDisposable {
 			Reflect.SetField(this.sa2, "teacherForm", form);
 
 			TestLevel level = this.CreateLevel(3, 5);
-			Reflect.SetField(this.sa2, "repititionsInPlace", true);
+			Reflect.SetField(this.sa2, "repetitionsInPlace", true);
 			this.SetState(inWin: false, levelLoading: true);
 			TextBox logBox = ClearLogBox();
 
@@ -386,14 +386,14 @@ public class HuntingLevelTests : IDisposable {
 		Reflect.SetField(level, typeof(HuntingLevel), "Next", next);
 	}
 
-	private static byte GetRepitition(HuntingLevel level) {
-		PropertyInfo prop = typeof(HuntingLevel).GetProperty("Repitition", BindingFlags.Instance | BindingFlags.NonPublic)!;
+	private static byte GetRepetition(HuntingLevel level) {
+		PropertyInfo prop = typeof(HuntingLevel).GetProperty("Repetition", BindingFlags.Instance | BindingFlags.NonPublic)!;
 		return (byte)prop.GetValue(level)!;
 	}
 
-	private static void SetRepitition(HuntingLevel level, byte repitition) {
-		PropertyInfo prop = typeof(HuntingLevel).GetProperty("Repitition", BindingFlags.Instance | BindingFlags.NonPublic)!;
-		prop.SetValue(level, repitition);
+	private static void SetRepetition(HuntingLevel level, byte repetition) {
+		PropertyInfo prop = typeof(HuntingLevel).GetProperty("Repetition", BindingFlags.Instance | BindingFlags.NonPublic)!;
+		prop.SetValue(level, repetition);
 	}
 
 	private static HuntingTeacherForm BuildForm() {
