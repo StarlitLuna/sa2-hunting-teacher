@@ -48,8 +48,8 @@ public class SettingsTests : IDisposable {
 		Assert.False(settings.MspReversedHints);
 		Assert.False(settings.BackToMenu);
 		Assert.True(settings.TimerReset);
-		Assert.False(settings.RepititionsInPlace);
-		Assert.Equal(3, settings.Repititions);
+		Assert.False(settings.RepetitionsInPlace);
+		Assert.Equal(3, settings.Repetitions);
 		Assert.NotNull(settings.CustomSequences);
 		Assert.Empty(settings.CustomSequences);
 		Assert.Equal(1L, settings.NextSequenceId);
@@ -88,14 +88,14 @@ public class SettingsTests : IDisposable {
 	public void Save_WritesJsonToSettingsPath() {
 		Settings settings = NewSettings();
 		settings.MspReversedHints = true;
-		settings.Repititions = 7;
+		settings.Repetitions = 7;
 
 		settings.Save();
 
 		Assert.True(File.Exists(Settings.SettingsPath));
 		string json = File.ReadAllText(Settings.SettingsPath);
 		Assert.Contains("\"MspReversedHints\": true", json);
-		Assert.Contains("\"Repititions\": 7", json);
+		Assert.Contains("\"Repetitions\": 7", json);
 	}
 
 	[Fact]
@@ -112,16 +112,16 @@ public class SettingsTests : IDisposable {
 	[Fact]
 	public void Save_OverwritesExistingFile() {
 		Settings first = NewSettings();
-		first.Repititions = 5;
+		first.Repetitions = 5;
 		first.Save();
 
 		Settings second = NewSettings();
-		second.Repititions = 9;
+		second.Repetitions = 9;
 		second.Save();
 
 		string json = File.ReadAllText(Settings.SettingsPath);
-		Assert.Contains("\"Repititions\": 9", json);
-		Assert.DoesNotContain("\"Repititions\": 5", json);
+		Assert.Contains("\"Repetitions\": 9", json);
+		Assert.DoesNotContain("\"Repetitions\": 5", json);
 	}
 
 	[Fact]
@@ -130,8 +130,8 @@ public class SettingsTests : IDisposable {
 		settings.MspReversedHints = true;
 		settings.BackToMenu = true;
 		settings.TimerReset = false;
-		settings.RepititionsInPlace = true;
-		settings.Repititions = 11;
+		settings.RepetitionsInPlace = true;
+		settings.Repetitions = 11;
 		settings.NextSequenceId = 42;
 		settings.CustomSequences.Add(new HuntingSequence {
 			Id = 7,
@@ -146,8 +146,8 @@ public class SettingsTests : IDisposable {
 		Assert.Contains("\"MspReversedHints\": true", json);
 		Assert.Contains("\"BackToMenu\": true", json);
 		Assert.Contains("\"TimerReset\": false", json);
-		Assert.Contains("\"RepititionsInPlace\": true", json);
-		Assert.Contains("\"Repititions\": 11", json);
+		Assert.Contains("\"RepetitionsInPlace\": true", json);
+		Assert.Contains("\"Repetitions\": 11", json);
 		Assert.Contains("\"CustomSequences\":", json);
 		Assert.Contains("\"Id\": 7", json);
 		Assert.Contains("\"Name\": \"Test\"", json);
@@ -201,8 +201,8 @@ public class SettingsTests : IDisposable {
 				"MspReversedHints": true,
 				"BackToMenu": true,
 				"TimerReset": false,
-				"RepititionsInPlace": true,
-				"Repititions": 13,
+				"RepetitionsInPlace": true,
+				"Repetitions": 13,
 				"NextSequenceId": 99,
 				"CustomSequences": [
 					{
@@ -223,8 +223,8 @@ public class SettingsTests : IDisposable {
 		Assert.True(result.MspReversedHints);
 		Assert.True(result.BackToMenu);
 		Assert.False(result.TimerReset);
-		Assert.True(result.RepititionsInPlace);
-		Assert.Equal(13, result.Repititions);
+		Assert.True(result.RepetitionsInPlace);
+		Assert.Equal(13, result.Repetitions);
 		Assert.Equal(99L, result.NextSequenceId);
 		Assert.Single(result.CustomSequences);
 		Assert.Equal(4L, result.CustomSequences[0].Id);
@@ -251,14 +251,14 @@ public class SettingsTests : IDisposable {
 		EnsureAppDataDir();
 		File.WriteAllText(Settings.SettingsPath, """
 			{
-				"Repititions": 4,
+				"Repetitions": 4,
 				"BackToMenu": true,
 			}
 			""");
 
 		Settings result = Settings.Load();
 
-		Assert.Equal(4, result.Repititions);
+		Assert.Equal(4, result.Repetitions);
 		Assert.True(result.BackToMenu);
 	}
 
@@ -268,7 +268,7 @@ public class SettingsTests : IDisposable {
 		File.WriteAllText(Settings.SettingsPath, """
 			{
 				// line comment
-				"Repititions": 6,
+				"Repetitions": 6,
 				/* block comment */
 				"TimerReset": false
 			}
@@ -276,7 +276,7 @@ public class SettingsTests : IDisposable {
 
 		Settings result = Settings.Load();
 
-		Assert.Equal(6, result.Repititions);
+		Assert.Equal(6, result.Repetitions);
 		Assert.False(result.TimerReset);
 	}
 
@@ -287,7 +287,7 @@ public class SettingsTests : IDisposable {
 			{
 				"mspreversedhints": true,
 				"timerreset": false,
-				"repititions": 99
+				"repetitions": 99
 			}
 			""");
 
@@ -295,7 +295,7 @@ public class SettingsTests : IDisposable {
 
 		Assert.False(result.MspReversedHints);
 		Assert.True(result.TimerReset);
-		Assert.Equal(3, result.Repititions);
+		Assert.Equal(3, result.Repetitions);
 	}
 
 	[Fact]
@@ -316,8 +316,8 @@ public class SettingsTests : IDisposable {
 		original.MspReversedHints = true;
 		original.BackToMenu = true;
 		original.TimerReset = false;
-		original.RepititionsInPlace = true;
-		original.Repititions = 17;
+		original.RepetitionsInPlace = true;
+		original.Repetitions = 17;
 		original.NextSequenceId = 1234567890123L;
 		original.CustomSequences.Add(new HuntingSequence {
 			Id = 1234567890122L,
@@ -335,8 +335,8 @@ public class SettingsTests : IDisposable {
 		Assert.Equal(original.MspReversedHints, loaded.MspReversedHints);
 		Assert.Equal(original.BackToMenu, loaded.BackToMenu);
 		Assert.Equal(original.TimerReset, loaded.TimerReset);
-		Assert.Equal(original.RepititionsInPlace, loaded.RepititionsInPlace);
-		Assert.Equal(original.Repititions, loaded.Repititions);
+		Assert.Equal(original.RepetitionsInPlace, loaded.RepetitionsInPlace);
+		Assert.Equal(original.Repetitions, loaded.Repetitions);
 		Assert.Equal(original.NextSequenceId, loaded.NextSequenceId);
 		Assert.Equal(original.CustomSequences.Count, loaded.CustomSequences.Count);
 		Assert.Equal(original.CustomSequences[0].Id, loaded.CustomSequences[0].Id);
@@ -385,8 +385,8 @@ public class SettingsTests : IDisposable {
 		Assert.False(settings.MspReversedHints);
 		Assert.False(settings.BackToMenu);
 		Assert.True(settings.TimerReset);
-		Assert.False(settings.RepititionsInPlace);
-		Assert.Equal(3, settings.Repititions);
+		Assert.False(settings.RepetitionsInPlace);
+		Assert.Equal(3, settings.Repetitions);
 		Assert.NotNull(settings.CustomSequences);
 		Assert.Empty(settings.CustomSequences);
 		Assert.Equal(1L, settings.NextSequenceId);

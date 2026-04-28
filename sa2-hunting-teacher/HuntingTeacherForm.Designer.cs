@@ -34,7 +34,7 @@ partial class HuntingTeacherForm
 		panel1 = new Panel();
 		setEditor = new Button();
 		timerReset = new CheckBox();
-		inPlaceRepititions = new CheckBox();
+		inPlaceRepetitions = new CheckBox();
 		label3 = new Label();
 		backToMenu = new CheckBox();
 		mspReverseHints = new CheckBox();
@@ -48,7 +48,7 @@ partial class HuntingTeacherForm
 		logBox = new TextBox();
 		reversedHintsTooltip = new ToolTip(components);
 		backToMenuTooltip = new ToolTip(components);
-		inPlaceRepititionsTooltip = new ToolTip(components);
+		inPlaceRepetitionsTooltip = new ToolTip(components);
 		timerResetTooltip = new ToolTip(components);
 		panel1.SuspendLayout();
 		((System.ComponentModel.ISupportInitialize)repetitions).BeginInit();
@@ -59,7 +59,7 @@ partial class HuntingTeacherForm
 		// 
 		panel1.Controls.Add(setEditor);
 		panel1.Controls.Add(timerReset);
-		panel1.Controls.Add(inPlaceRepititions);
+		panel1.Controls.Add(inPlaceRepetitions);
 		panel1.Controls.Add(label3);
 		panel1.Controls.Add(backToMenu);
 		panel1.Controls.Add(mspReverseHints);
@@ -98,16 +98,16 @@ partial class HuntingTeacherForm
 		timerReset.UseVisualStyleBackColor = true;
 		timerReset.CheckedChanged += SettingsChanged;
 		// 
-		// inPlaceRepititions
+		// inPlaceRepetitions
 		// 
-		inPlaceRepititions.AutoSize = true;
-		inPlaceRepititions.Location = new Point(484, 50);
-		inPlaceRepititions.Name = "inPlaceRepititions";
-		inPlaceRepititions.Size = new Size(157, 24);
-		inPlaceRepititions.TabIndex = 9;
-		inPlaceRepititions.Text = "Repititions In Place";
-		inPlaceRepititions.UseVisualStyleBackColor = true;
-		inPlaceRepititions.CheckedChanged += SettingsChanged;
+		inPlaceRepetitions.AutoSize = true;
+		inPlaceRepetitions.Location = new Point(484, 50);
+		inPlaceRepetitions.Name = "inPlaceRepetitions";
+		inPlaceRepetitions.Size = new Size(157, 24);
+		inPlaceRepetitions.TabIndex = 9;
+		inPlaceRepetitions.Text = "Repetitions In Place";
+		inPlaceRepetitions.UseVisualStyleBackColor = true;
+		inPlaceRepetitions.CheckedChanged += SettingsChanged;
 		// 
 		// label3
 		// 
@@ -261,8 +261,8 @@ partial class HuntingTeacherForm
 	private CheckBox backToMenu;
 	private ToolTip reversedHintsTooltip;
 	private ToolTip backToMenuTooltip;
-	private CheckBox inPlaceRepititions;
-	private ToolTip inPlaceRepititionsTooltip;
+	private CheckBox inPlaceRepetitions;
+	private ToolTip inPlaceRepetitionsTooltip;
 	private CheckBox timerReset;
 	private ToolTip timerResetTooltip;
 	private Button setEditor;

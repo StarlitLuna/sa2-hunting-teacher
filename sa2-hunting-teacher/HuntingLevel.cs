@@ -25,7 +25,7 @@ public abstract class HuntingLevel(SA2Manager manager, byte repetitions) {
 
 	protected byte Repetitions { get; } = repetitions;
 
-	protected byte Repitition { get; set; } = 0;
+	protected byte Repetition { get; set; } = 0;
 
 	public abstract Dictionary<int, string> PieceToHintInstance { get; }
 
@@ -48,20 +48,20 @@ public abstract class HuntingLevel(SA2Manager manager, byte repetitions) {
 				this.Sequence[Next],
 				this.Next + 1,
 				this.Sequence.Length,
-				!this.Manager.RepititionsInPlace()
+				!this.Manager.RepetitionsInPlace()
 					? (int)Math.Ceiling((double)(this.SequenceCount + 1) / (double)this.Sequence.Length)
-					: (this.Repitition + 1)
+					: (this.Repetition + 1)
 			);
 		}
 	}
 
 	private int NextSequence() {
-        if (this.Manager.RepititionsInPlace()) {
-            if (++this.Repitition < this.Repetitions) {
+        if (this.Manager.RepetitionsInPlace()) {
+            if (++this.Repetition < this.Repetitions) {
 				return this.Next;
 			}
 
-			this.Repitition = 0;
+			this.Repetition = 0;
         }
 
         return this.Next + 1 >= this.Sequence.Length ? 0 : this.Next + 1;
