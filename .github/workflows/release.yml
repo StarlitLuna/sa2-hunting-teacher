@@ -47,6 +47,8 @@ jobs:
     runs-on: windows-latest
     permissions:
       contents: write
+      id-token: write
+      attestations: write
     steps:
       - uses: actions/checkout@v4
 
@@ -83,6 +85,24 @@ jobs:
             Pop-Location
           }
 
+      - name: Generate artifact attestation
+        uses: actions/attest@v4
+        with:
+          subject-path: sa2-hunting-teacher.7z
+
+      - name: Write release verification instructions
+        shell: pwsh
+        run: |
+          @'
+          ## Verify this release
+
+          This release archive includes a GitHub artifact attestation. After downloading `sa2-hunting-teacher.7z`, you can verify it was built by this repository's release workflow:
+
+          ```bash
+          gh attestation verify sa2-hunting-teacher.7z -R StarlitLuna/sa2-hunting-teacher --signer-workflow StarlitLuna/sa2-hunting-teacher/.github/workflows/release.yml
+          ```
+          '@ | Set-Content -Path release-attestation.md -Encoding UTF8
+
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
@@ -90,6 +110,7 @@ jobs:
           name: ${{ needs.check.outputs.tag }}
           target_commitish: ${{ github.sha }}
           files: sa2-hunting-teacher.7z
+          body_path: release-attestation.md
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

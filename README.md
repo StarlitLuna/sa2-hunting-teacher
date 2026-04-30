@@ -35,6 +35,12 @@ without any unnecessarily repeated sets.
 
 The latest version can be found for download as an executable file on the [releases tab.](https://github.com/StarlitLuna/sa2-hunting-teacher/releases)
 
+Release archives include GitHub artifact attestations. After downloading `sa2-hunting-teacher.7z`, you can verify that GitHub built it from this repository's release workflow with:
+
+```bash
+gh attestation verify sa2-hunting-teacher.7z -R StarlitLuna/sa2-hunting-teacher --signer-workflow StarlitLuna/sa2-hunting-teacher/.github/workflows/release.yml
+```
+
 ### Usage
 
 To use this tool:
