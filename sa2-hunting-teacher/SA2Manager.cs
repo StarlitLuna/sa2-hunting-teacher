@@ -1,6 +1,8 @@
 ﻿using sa2_hunting_teacher.Knuckles;
 using sa2_hunting_teacher.Rouge;
+using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO.MemoryMappedFiles;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -59,6 +61,10 @@ public partial class SA2Manager : IDisposable {
 			false,
 			this.targetProcess.Id
 		);
+
+		if (this.sa2.GetValueOrDefault() == IntPtr.Zero) {
+			this.HandleInjectionFailure();
+		}
 
 		SA2Manager.MemoryMapper ??= MemoryMappedFile.CreateOrOpen(
 			"SA2-Hunter-Teacher",
@@ -144,10 +150,15 @@ public partial class SA2Manager : IDisposable {
 	}
 
 	private bool DllInjected() {
-		for (int i = 0; i < this.targetProcess.Modules.Count; i++) {
-			if (this.targetProcess.Modules[i].ModuleName.ToLower().Equals(HELPER_DLL_NAME)) {
-				return true;
+		try {
+			for (int i = 0; i < this.targetProcess.Modules.Count; i++) {
+				if (this.targetProcess.Modules[i].ModuleName.ToLower().Equals(HELPER_DLL_NAME)) {
+					return true;
+				}
 			}
+		} catch (Win32Exception ex) when (ex.NativeErrorCode == ERROR_ACCESS_DENIED) {
+			this.CloseInjectionResources();
+			throw new SA2ProcessAccessException(GetInjectionFailureMessage(ex.NativeErrorCode));
 		}
 
 		return false;
@@ -161,13 +172,20 @@ public partial class SA2Manager : IDisposable {
 		string dllPath = Path.Join(Directory.GetCurrentDirectory(), HELPER_DLL_NAME);
 		IntPtr loadLibraryAddr = GetProcAddress(GetModuleHandle("kernel32.dll"), "LoadLibraryA");
 		IntPtr allocMemAddress = VirtualAllocEx((IntPtr)this.sa2!, IntPtr.Zero, (uint)((dllPath.Length + 1) * Marshal.SizeOf(typeof(char))), MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+		if (allocMemAddress == IntPtr.Zero) {
+			this.HandleInjectionFailure();
+		}
+
 		bool success = WriteProcessMemory((IntPtr)this.sa2!, allocMemAddress, Encoding.Default.GetBytes(dllPath), (uint)((dllPath.Length + 1) * Marshal.SizeOf(typeof(char))), out _);
 		if (!success) {
-			this.HandleMemoryError("Failed to inject helper to SA2 process.");
-			return;
+			this.HandleInjectionFailure();
 		}
 
 		IntPtr helperThread = CreateRemoteThread((IntPtr)this.sa2!, IntPtr.Zero, 0, loadLibraryAddr, allocMemAddress, 0, IntPtr.Zero);
+		if (helperThread == IntPtr.Zero) {
+			this.HandleInjectionFailure();
+		}
+
 		WaitForSingleObject(helperThread, WAIT_INFINITE);
 
 		if (!GetExitCodeThread(helperThread, out uint helperExitCode)) {
@@ -179,13 +197,41 @@ public partial class SA2Manager : IDisposable {
 		}
 	}
 
+	[DoesNotReturn]
+	private void HandleInjectionFailure() {
+		int errorCode = Marshal.GetLastPInvokeError();
+		this.CloseInjectionResources();
+		if (errorCode == ERROR_ACCESS_DENIED) {
+			throw new SA2ProcessAccessException(GetInjectionFailureMessage(errorCode));
+		}
+
+		throw new SA2InjectionException(GetInjectionFailureMessage(errorCode));
+	}
+
+	private static string GetInjectionFailureMessage(int errorCode) {
+		if (errorCode == ERROR_ACCESS_DENIED) {
+			return "SA2 appears to be running elevated; restart SA2 normally or run this tool as administrator.";
+		}
+
+		return "Failed to inject helper to SA2 process.";
+	}
+
+	private void CloseInjectionResources() {
+		if (SA2Manager.MemoryMapper != null) {
+			SA2Manager.MemoryMapper.Dispose();
+			SA2Manager.MemoryMapper = null;
+		}
+
+		this.CloseResource();
+	}
+
 	~SA2Manager() {
 		this.CloseResource();
 	}
 
 	public static void Start(LevelRow selection, byte repetitions, HuntingTeacherForm teacherForm, bool repetitionsInPlace) {
 		SA2Manager.CanRun = true;
-		 
+
 		using (SA2Manager instance = new(selection, repetitions, teacherForm, repetitionsInPlace)) {
 			while (SA2Manager.CanRun && !instance.level.SequenceComplete() && !instance.targetProcess.HasExited) {
 				instance.sharedMemory.Read(0, out instance.HunterTeacherData);
@@ -213,19 +259,19 @@ public partial class SA2Manager : IDisposable {
 		SA2Manager.CanRun = false;
 	}
 
-	[LibraryImport("kernel32.dll")]
+	[LibraryImport("kernel32.dll", SetLastError = true)]
 	private static partial IntPtr OpenProcess(ProcessAccessFlags dwDesiredAccess, [MarshalAs(UnmanagedType.Bool)] bool bInheritHandle, int dwProcessId);
 
 	[LibraryImport("kernel32.dll", EntryPoint = "GetModuleHandleW", StringMarshalling = StringMarshalling.Utf16)]
 	private static partial IntPtr GetModuleHandle(string lpModuleName);
-	
+
 	[LibraryImport("kernel32.dll", EntryPoint = "GetProcAddress", SetLastError = true)]
 	private static partial IntPtr GetProcAddress(IntPtr hModule, [MarshalAs(UnmanagedType.LPStr)] string procName);
 
 	[LibraryImport("kernel32.dll", SetLastError = true)]
 	private static partial IntPtr VirtualAllocEx(IntPtr hProcess, IntPtr lpAddress, uint dwSize, uint flAllocationType, uint flProtect);
 
-	[LibraryImport("kernel32.dll")]
+	[LibraryImport("kernel32.dll", SetLastError = true)]
 	private static partial IntPtr CreateRemoteThread(IntPtr hProcess, IntPtr lpThreadAttributes, uint dwStackSize, IntPtr lpStartAddress, IntPtr lpParameter, uint dwCreationFlags, IntPtr lpThreadId);
 
 	[LibraryImport("kernel32.dll")]
@@ -252,7 +298,12 @@ public partial class SA2Manager : IDisposable {
 	private const uint MEM_RESERVE = 0x00002000;
 	private const uint PAGE_READWRITE = 4;
 	private const uint WAIT_INFINITE = 0xFFFFFFFF;
+	private const int ERROR_ACCESS_DENIED = 5;
 }
+
+internal class SA2InjectionException(string message) : Exception(message);
+
+internal class SA2ProcessAccessException(string message) : SA2InjectionException(message);
 
 [Flags]
 internal enum ProcessAccessFlags : uint {

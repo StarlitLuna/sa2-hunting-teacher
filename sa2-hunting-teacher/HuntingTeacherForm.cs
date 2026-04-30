@@ -103,6 +103,18 @@ public partial class HuntingTeacherForm : Form {
 		Task.Run(() => {
 			try {
 				SA2Manager.Start(selectedLevel, (byte)this.repetitions.Value, this, this.inPlaceRepetitions.Checked);
+			} catch (SA2ProcessAccessException ex) {
+				this.Invoke(() => {
+					MessageBox.Show(this, ex.Message, "SA2 Access Denied", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+					this.ResetBtn_Click(sender, e);
+				});
+			} catch (SA2InjectionException ex) {
+				this.Invoke(() => {
+					MessageBox.Show(this, ex.Message, "SA2 Injection Failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+					this.ResetBtn_Click(sender, e);
+				});
 			} catch (ArgumentException) {
 				this.Invoke(() => {
 					MessageBox.Show(this, "A running instance of SA2 could not be found.\n" +

@@ -35,12 +35,18 @@ without any unnecessarily repeated sets.
 
 The latest version can be found for download as an executable file on the [releases tab.](https://github.com/StarlitLuna/sa2-hunting-teacher/releases)
 
+Release archives include GitHub artifact attestations. After downloading `sa2-hunting-teacher.7z`, you can verify that GitHub built it from this repository's release workflow with:
+
+```bash
+gh attestation verify sa2-hunting-teacher.7z -R StarlitLuna/sa2-hunting-teacher --signer-workflow StarlitLuna/sa2-hunting-teacher/.github/workflows/release.yml
+```
+
 ### Usage
 
 To use this tool:
 
-* Run it as an Administrator (you should get a prompt to run as admin anyway)
 * Ensure SA2 is running before pressing start (it doesn't matter which order you open this or SA2 in as long as both are running)
+  * If SA2 is running elevated, either restart SA2 normally or run this tool as an administrator.
 * Configure the tool
   * Set the level you want to learn and number of repetitions
 * Press start in Hunting Teacher app
