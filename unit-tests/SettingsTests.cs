@@ -45,7 +45,7 @@ public class SettingsTests : IDisposable {
 	public void Constructor_HasDocumentedDefaultValues() {
 		Settings settings = NewSettings();
 
-		Assert.False(settings.MspReversedHints);
+		Assert.Equal(MspHints.ALTERNATING, settings.MspHints);
 		Assert.False(settings.BackToMenu);
 		Assert.True(settings.TimerReset);
 		Assert.False(settings.RepetitionsInPlace);
@@ -87,14 +87,14 @@ public class SettingsTests : IDisposable {
 	[Fact]
 	public void Save_WritesJsonToSettingsPath() {
 		Settings settings = NewSettings();
-		settings.MspReversedHints = true;
+		settings.MspHints = MspHints.FIXED;
 		settings.Repetitions = 7;
 
 		settings.Save();
 
 		Assert.True(File.Exists(Settings.SettingsPath));
 		string json = File.ReadAllText(Settings.SettingsPath);
-		Assert.Contains("\"MspReversedHints\": true", json);
+		Assert.Contains("\"MspHints\": 1", json);
 		Assert.Contains("\"Repetitions\": 7", json);
 	}
 
@@ -127,7 +127,7 @@ public class SettingsTests : IDisposable {
 	[Fact]
 	public void Save_SerializesAllProperties() {
 		Settings settings = NewSettings();
-		settings.MspReversedHints = true;
+		settings.MspHints = MspHints.ALTERNATING_REVERSED;
 		settings.BackToMenu = true;
 		settings.TimerReset = false;
 		settings.RepetitionsInPlace = true;
@@ -143,7 +143,7 @@ public class SettingsTests : IDisposable {
 		settings.Save();
 
 		string json = File.ReadAllText(Settings.SettingsPath);
-		Assert.Contains("\"MspReversedHints\": true", json);
+		Assert.Contains("\"MspHints\": 3", json);
 		Assert.Contains("\"BackToMenu\": true", json);
 		Assert.Contains("\"TimerReset\": false", json);
 		Assert.Contains("\"RepetitionsInPlace\": true", json);
@@ -198,7 +198,7 @@ public class SettingsTests : IDisposable {
 		EnsureAppDataDir();
 		string json = """
 			{
-				"MspReversedHints": true,
+				"MspHints": 0,
 				"BackToMenu": true,
 				"TimerReset": false,
 				"RepetitionsInPlace": true,
@@ -220,7 +220,7 @@ public class SettingsTests : IDisposable {
 
 		Settings result = Settings.Load();
 
-		Assert.True(result.MspReversedHints);
+		Assert.Equal(MspHints.REVERSED, result.MspHints);
 		Assert.True(result.BackToMenu);
 		Assert.False(result.TimerReset);
 		Assert.True(result.RepetitionsInPlace);
@@ -285,7 +285,7 @@ public class SettingsTests : IDisposable {
 		EnsureAppDataDir();
 		File.WriteAllText(Settings.SettingsPath, """
 			{
-				"mspreversedhints": true,
+				"msphints": 0,
 				"timerreset": false,
 				"repetitions": 99
 			}
@@ -293,7 +293,7 @@ public class SettingsTests : IDisposable {
 
 		Settings result = Settings.Load();
 
-		Assert.False(result.MspReversedHints);
+		Assert.Equal(MspHints.ALTERNATING, result.MspHints);
 		Assert.True(result.TimerReset);
 		Assert.Equal(3, result.Repetitions);
 	}
@@ -313,7 +313,7 @@ public class SettingsTests : IDisposable {
 	[Fact]
 	public void RoundTrip_SaveThenLoad_PreservesAllProperties() {
 		Settings original = NewSettings();
-		original.MspReversedHints = true;
+		original.MspHints = MspHints.ALTERNATING_REVERSED;
 		original.BackToMenu = true;
 		original.TimerReset = false;
 		original.RepetitionsInPlace = true;
@@ -332,7 +332,7 @@ public class SettingsTests : IDisposable {
 		original.Save();
 		Settings loaded = Settings.Load();
 
-		Assert.Equal(original.MspReversedHints, loaded.MspReversedHints);
+		Assert.Equal(original.MspHints, loaded.MspHints);
 		Assert.Equal(original.BackToMenu, loaded.BackToMenu);
 		Assert.Equal(original.TimerReset, loaded.TimerReset);
 		Assert.Equal(original.RepetitionsInPlace, loaded.RepetitionsInPlace);
@@ -346,6 +346,47 @@ public class SettingsTests : IDisposable {
 		Assert.Equal(0x1234, loaded.CustomSequences[0].Sets[0].P1Id);
 		Assert.Equal(0x5678, loaded.CustomSequences[0].Sets[0].P2Id);
 		Assert.Equal(0x9ABC, loaded.CustomSequences[0].Sets[0].P3Id);
+	}
+
+	[Theory]
+	[InlineData(MspHints.REVERSED)]
+	[InlineData(MspHints.FIXED)]
+	[InlineData(MspHints.ALTERNATING)]
+	[InlineData(MspHints.ALTERNATING_REVERSED)]
+	public void RoundTrip_PreservesEachMspHintsValue(MspHints value) {
+		Settings original = NewSettings();
+		original.MspHints = value;
+
+		original.Save();
+		Settings loaded = Settings.Load();
+
+		Assert.Equal(value, loaded.MspHints);
+	}
+
+	[Fact]
+	public void Load_DefaultsMspHintsToAlternating_WhenFieldMissingFromJson() {
+		EnsureAppDataDir();
+		File.WriteAllText(Settings.SettingsPath, """
+			{
+				"Repetitions": 4
+			}
+			""");
+
+		Settings result = Settings.Load();
+
+		Assert.Equal(MspHints.ALTERNATING, result.MspHints);
+	}
+
+	[Fact]
+	public void Save_SerializesMspHintsAsInteger_NotName() {
+		Settings settings = NewSettings();
+		settings.MspHints = MspHints.ALTERNATING_REVERSED;
+
+		settings.Save();
+
+		string json = File.ReadAllText(Settings.SettingsPath);
+		Assert.Contains("\"MspHints\": 3", json);
+		Assert.DoesNotContain("ALTERNATING_REVERSED", json);
 	}
 
 	#endregion
@@ -382,7 +423,7 @@ public class SettingsTests : IDisposable {
 #pragma warning restore CS0618
 
 	private static void AssertHasDefaults(Settings settings) {
-		Assert.False(settings.MspReversedHints);
+		Assert.Equal(MspHints.ALTERNATING, settings.MspHints);
 		Assert.False(settings.BackToMenu);
 		Assert.True(settings.TimerReset);
 		Assert.False(settings.RepetitionsInPlace);

@@ -78,11 +78,19 @@ You can also break out of a sequence early at any time by pressing the reset but
 Mad Space is a unique level in that the first hint of every piece (the only hint we care about) is reversed making just reading the hint itself
 harder than it really needs to be in a stage that already presents other gimmicks and challenges. For that reason, this tool also provides
 a setting that allows you to correct the order of the letters in each first hint so that it is readable from left to right like normal.
-This feature is supported across all languages. By default, the hint reversal feature is turned on by default making reversed hints read naturally in-game.
 
 When Mad Space is selected as the stage for learning in the level select drop down, a check box will appear asking if
 you want to allow reversed hints. Leaving this off as it is by default will fix the hint text to make it readable. Turning it on will leave the hints
 in their reversed ordering.
+
+The setting has 4 options available:
+
+- Fixed: Hints appear with words spelled correctly (readable from left to right)
+- Reversed: Hints appear with words reversed (what happens in a regular game play)
+- Alternating: Hints will appear with words spelled correctly the first time, then reversed and alternate with each repetition
+- Alternating Reversed: The same as above but the first time the hints will appear reversed instead of fixed.
+  - Note: When either alternating setting is selected, Repetitions in Place will be forced and a minimum of 2 repetitions will be required
+  - This allows you to see the same sets back to back with both spellings.
 
 Whether you think learning the pieces by reading their hints ordered correctly and then practicing with the reversed words later will be
 more beneficial or learning as the hints would actually appear in a real run from the start and not looking at standardized words at all

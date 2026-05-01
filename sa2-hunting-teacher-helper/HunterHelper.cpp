@@ -70,6 +70,10 @@ void HunterHelper::LoadLevel() {
 		HunterHelper::TeacherDataState->levelLoading = true;
 	}
 
+	if (CurrentLevel != LevelIDs_MadSpace) {
+		HunterHelper::HintsBuffer = nullptr;
+	}
+
 	hLoadLevel.Original();
 }
 
@@ -158,12 +162,24 @@ void HunterHelper::ReverseShiftJISHint(uint8_t* hintStart, uint8_t* hintEnd) {
 }
 
 void* HunterHelper::EmeraldHintsFileLoaderInterceptor(const void* hintsFileName) {
-	if (CurrentLevel != LevelIDs_MadSpace || HunterHelper::TeacherDataState->mspReversedHints) {
+	if (CurrentLevel != LevelIDs_MadSpace) {
+		HunterHelper::HintsBuffer = nullptr;
 		return hLoadStageHintsFile.Original(hintsFileName);
 	}
 
 	void* data = hLoadStageHintsFile.Original(hintsFileName);
-	uint8_t* base = (uint8_t *)data;
+	HunterHelper::HintsBuffer = data;
+	HunterHelper::HintsCurrentlyReversed = true;
+
+	if (!HunterHelper::TeacherDataState->mspReversedHints) {
+		HunterHelper::ApplyHintsFlip(data);
+	}
+
+	return data;
+}
+
+void HunterHelper::ApplyHintsFlip(void* data) {
+	uint8_t* base = (uint8_t*)data;
 	auto table = reinterpret_cast<uint32_t*>(base);
 	for (size_t i = 0; i < HunterHelper::MAX_HINT_SIZE; ++i) {
 		uint32_t off = table[i];
@@ -171,40 +187,41 @@ void* HunterHelper::EmeraldHintsFileLoaderInterceptor(const void* hintsFileName)
 			break;
 		}
 
-		char* hint = reinterpret_cast<char*>(base + off);
-		if (i % 3 == 0) {
-			uint8_t* hintTextStart = reinterpret_cast<uint8_t*>(hint);
-			// command options to skip
-			if (*hintTextStart == NEW_LINE) {
-				hintTextStart++;
-				while (*hintTextStart != NULL && *hintTextStart != ' ' && *hintTextStart != ':') {
-					hintTextStart++;
-				}
+		if (i % 3 != 0) {
+			continue;
+		}
 
-				if (*hintTextStart != NULL) {
-					hintTextStart++;
-				}
-			}
-
-			// center command option
-			if (*hintTextStart == CENTER_COMMAND) {
+		uint8_t* hintTextStart = base + off;
+		// command options to skip
+		if (*hintTextStart == NEW_LINE) {
+			hintTextStart++;
+			while (*hintTextStart != NULL && *hintTextStart != ' ' && *hintTextStart != ':') {
 				hintTextStart++;
 			}
 
-			uint8_t* hintTextEnd = hintTextStart;
-			while (*hintTextEnd != NULL && *hintTextEnd != NEW_LINE) {
-				hintTextEnd++;
+			if (*hintTextStart != NULL) {
+				hintTextStart++;
 			}
+		}
 
-			if (CurrentLanguage == Language_Japanese) {
-				HunterHelper::ReverseShiftJISHint(hintTextStart, hintTextEnd);
-			} else {
-				std::reverse(hintTextStart, hintTextEnd);
-			}
+		// center command option
+		if (*hintTextStart == CENTER_COMMAND) {
+			hintTextStart++;
+		}
+
+		uint8_t* hintTextEnd = hintTextStart;
+		while (*hintTextEnd != NULL && *hintTextEnd != NEW_LINE) {
+			hintTextEnd++;
+		}
+
+		if (CurrentLanguage == Language_Japanese) {
+			HunterHelper::ReverseShiftJISHint(hintTextStart, hintTextEnd);
+		} else {
+			std::reverse(hintTextStart, hintTextEnd);
 		}
 	}
 
-	return data;
+	HunterHelper::HintsCurrentlyReversed = !HunterHelper::HintsCurrentlyReversed;
 }
 
 Emerald* HunterHelper::GetPieceById(EmeraldManager* emManager, int id) {
@@ -255,6 +272,14 @@ void HunterHelper::LoadEmeraldLocations(EmeraldManager* emManager) {
 	// if resetting pieces, wait for teacher to send new ones
 	while (HunterHelper::TeacherDataState->inWinScreen) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
+
+	if (
+		CurrentLevel == LevelIDs_MadSpace &&
+		HunterHelper::HintsBuffer &&
+		HunterHelper::TeacherDataState->mspReversedHints != HunterHelper::HintsCurrentlyReversed
+	) {
+		HunterHelper::ApplyHintsFlip(HunterHelper::HintsBuffer);
 	}
 
 	Life_Count[0] = 99;

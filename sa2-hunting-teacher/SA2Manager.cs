@@ -72,9 +72,23 @@ public partial class SA2Manager : IDisposable {
 			MemoryMappedFileAccess.ReadWrite
 		);
 
+		MspHints mspSelection = MspHints.ALTERNATING;
+		bool backToMenu = false;
+		bool timerReset = true;
+		teacherForm.Invoke(() => {
+			mspSelection = teacherForm.MspHintsSelection();
+			backToMenu = teacherForm.BackToMenu();
+			timerReset = teacherForm.TimerReset();
+		});
+
+		// Counter intuitively, we set reversed hints to true on ALTERNATING instead of ALTERNATING_REVERSED
+		// because ApplySet will set reversed hints to the opposite for the alternating settings
+		// so this value needs to be initially wrong when an alternating setting is set.
+		bool reversedHints = mspSelection == MspHints.REVERSED || mspSelection == MspHints.ALTERNATING;
+
 		this.repetitionsInPlace = repetitionsInPlace;
 		this.sharedMemory = SA2Manager.MemoryMapper.CreateViewAccessor();
-		this.ApplyDataDefaults(this.level.LevelId, teacherForm.MspReversedHints(), teacherForm.BackToMenu(), teacherForm.TimerReset());
+		this.ApplyDataDefaults(this.level.LevelId, reversedHints, backToMenu, timerReset);
 		this.InjectDll();
 	}
 
@@ -98,6 +112,16 @@ public partial class SA2Manager : IDisposable {
 		this.HunterTeacherData.p2Id = set.P2Id;
 		this.HunterTeacherData.p3Id = set.P3Id;
 		this.HunterTeacherData.levelLoading = false;
+
+		MspHints selection = MspHints.ALTERNATING;
+		this.teacherForm.Invoke(() => selection = this.teacherForm.MspHintsSelection());
+		if (selection == MspHints.ALTERNATING || selection == MspHints.ALTERNATING_REVERSED) {
+			this.HunterTeacherData.mspReversedHints = !this.HunterTeacherData.mspReversedHints;
+			if (currentRep == 1) {
+				this.HunterTeacherData.mspReversedHints = selection == MspHints.ALTERNATING_REVERSED;
+			}
+		}
+
 		if (!this.level.SequenceComplete()) {
 			this.LogMessage($"Writing Set ({seqCount} / {seqTotal}) For Rep ({currentRep}): " + set);
 		}
