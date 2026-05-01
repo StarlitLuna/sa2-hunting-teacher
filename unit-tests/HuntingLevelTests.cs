@@ -110,47 +110,59 @@ public class HuntingLevelTests : IDisposable {
 
 	[Fact]
 	public void RunSequence_AppliesCurrentSet_WhenLevelLoadingOnly_WithoutAdvancingSequenceCountOrNext() {
-		TestLevel level = this.CreateLevel(1, 3);
-		SetSequenceCount(level, 100);
-		this.SetState(inWin: false, levelLoading: true);
+		StaHelper.RunSta(() => {
+			using HuntingTeacherForm form = BuildForm();
+			Reflect.SetField(this.sa2, "teacherForm", form);
+			TestLevel level = this.CreateLevel(1, 3);
+			SetSequenceCount(level, 100);
+			this.SetState(inWin: false, levelLoading: true);
 
-		level.RunSequence();
+			level.RunSequence();
 
-		HunterTeacherData data = this.GetData();
-		Assert.Equal(0x1000, data.p1Id);
-		Assert.Equal(0x2000, data.p2Id);
-		Assert.Equal(0x3000, data.p3Id);
-		Assert.Equal(100, GetSequenceCount(level));
-		Assert.Equal(0, GetNext(level));
+			HunterTeacherData data = this.GetData();
+			Assert.Equal(0x1000, data.p1Id);
+			Assert.Equal(0x2000, data.p2Id);
+			Assert.Equal(0x3000, data.p3Id);
+			Assert.Equal(100, GetSequenceCount(level));
+			Assert.Equal(0, GetNext(level));
+		});
 	}
 
 	[Fact]
 	public void RunSequence_AdvancesAndAppliesNextSet_WhenInWinScreen() {
-		TestLevel level = this.CreateLevel(1, 3);
-		SetSequenceCount(level, 100);
-		SetNext(level, 0);
-		this.SetState(inWin: true, levelLoading: false);
+		StaHelper.RunSta(() => {
+			using HuntingTeacherForm form = BuildForm();
+			Reflect.SetField(this.sa2, "teacherForm", form);
+			TestLevel level = this.CreateLevel(1, 3);
+			SetSequenceCount(level, 100);
+			SetNext(level, 0);
+			this.SetState(inWin: true, levelLoading: false);
 
-		level.RunSequence();
+			level.RunSequence();
 
-		HunterTeacherData data = this.GetData();
-		Assert.Equal(0x1001, data.p1Id);
-		Assert.Equal(1, GetNext(level));
-		Assert.Equal(101, GetSequenceCount(level));
+			HunterTeacherData data = this.GetData();
+			Assert.Equal(0x1001, data.p1Id);
+			Assert.Equal(1, GetNext(level));
+			Assert.Equal(101, GetSequenceCount(level));
+		});
 	}
 
 	[Fact]
 	public void RunSequence_PrefersWinScreenAdvance_WhenBothFlagsAreSet() {
-		TestLevel level = this.CreateLevel(1, 3);
-		SetSequenceCount(level, 100);
-		SetNext(level, 0);
-		this.SetState(inWin: true, levelLoading: true);
+		StaHelper.RunSta(() => {
+			using HuntingTeacherForm form = BuildForm();
+			Reflect.SetField(this.sa2, "teacherForm", form);
+			TestLevel level = this.CreateLevel(1, 3);
+			SetSequenceCount(level, 100);
+			SetNext(level, 0);
+			this.SetState(inWin: true, levelLoading: true);
 
-		level.RunSequence();
+			level.RunSequence();
 
-		Assert.Equal(0x1001, this.GetData().p1Id);
-		Assert.Equal(1, GetNext(level));
-		Assert.Equal(101, GetSequenceCount(level));
+			Assert.Equal(0x1001, this.GetData().p1Id);
+			Assert.Equal(1, GetNext(level));
+			Assert.Equal(101, GetSequenceCount(level));
+		});
 	}
 
 	#endregion
@@ -159,30 +171,38 @@ public class HuntingLevelTests : IDisposable {
 
 	[Fact]
 	public void RunSequence_StandardMode_WrapsToZeroAfterLastSet() {
-		TestLevel level = this.CreateLevel(2, 3);
-		Reflect.SetField(this.sa2, "repetitionsInPlace", false);
-		SetSequenceCount(level, 100);
-		SetNext(level, 2);
-		this.SetState(inWin: true, levelLoading: false);
+		StaHelper.RunSta(() => {
+			using HuntingTeacherForm form = BuildForm();
+			Reflect.SetField(this.sa2, "teacherForm", form);
+			TestLevel level = this.CreateLevel(2, 3);
+			Reflect.SetField(this.sa2, "repetitionsInPlace", false);
+			SetSequenceCount(level, 100);
+			SetNext(level, 2);
+			this.SetState(inWin: true, levelLoading: false);
 
-		level.RunSequence();
+			level.RunSequence();
 
-		Assert.Equal(0x1000, this.GetData().p1Id);
-		Assert.Equal(0, GetNext(level));
+			Assert.Equal(0x1000, this.GetData().p1Id);
+			Assert.Equal(0, GetNext(level));
+		});
 	}
 
 	[Fact]
 	public void RunSequence_StandardMode_AdvancesOneStepAtATime() {
-		TestLevel level = this.CreateLevel(2, 4);
-		Reflect.SetField(this.sa2, "repetitionsInPlace", false);
-		SetSequenceCount(level, 100);
-		SetNext(level, 1);
-		this.SetState(inWin: true, levelLoading: false);
+		StaHelper.RunSta(() => {
+			using HuntingTeacherForm form = BuildForm();
+			Reflect.SetField(this.sa2, "teacherForm", form);
+			TestLevel level = this.CreateLevel(2, 4);
+			Reflect.SetField(this.sa2, "repetitionsInPlace", false);
+			SetSequenceCount(level, 100);
+			SetNext(level, 1);
+			this.SetState(inWin: true, levelLoading: false);
 
-		level.RunSequence();
+			level.RunSequence();
 
-		Assert.Equal(0x1002, this.GetData().p1Id);
-		Assert.Equal(2, GetNext(level));
+			Assert.Equal(0x1002, this.GetData().p1Id);
+			Assert.Equal(2, GetNext(level));
+		});
 	}
 
 	[Fact]
@@ -228,50 +248,62 @@ public class HuntingLevelTests : IDisposable {
 
 	[Fact]
 	public void RunSequence_RepetitionsInPlace_RepeatsCurrentSetUntilRepsExhausted() {
-		TestLevel level = this.CreateLevel(2, 3);
-		Reflect.SetField(this.sa2, "repetitionsInPlace", true);
-		SetSequenceCount(level, 100);
-		SetNext(level, 0);
-		SetRepetition(level, 0);
-		this.SetState(inWin: true, levelLoading: false);
+		StaHelper.RunSta(() => {
+			using HuntingTeacherForm form = BuildForm();
+			Reflect.SetField(this.sa2, "teacherForm", form);
+			TestLevel level = this.CreateLevel(2, 3);
+			Reflect.SetField(this.sa2, "repetitionsInPlace", true);
+			SetSequenceCount(level, 100);
+			SetNext(level, 0);
+			SetRepetition(level, 0);
+			this.SetState(inWin: true, levelLoading: false);
 
-		level.RunSequence();
+			level.RunSequence();
 
-		Assert.Equal(0x1000, this.GetData().p1Id);
-		Assert.Equal(0, GetNext(level));
-		Assert.Equal((byte)1, GetRepetition(level));
+			Assert.Equal(0x1000, this.GetData().p1Id);
+			Assert.Equal(0, GetNext(level));
+			Assert.Equal((byte)1, GetRepetition(level));
+		});
 	}
 
 	[Fact]
 	public void RunSequence_RepetitionsInPlace_AdvancesAfterAllRepetitionsForCurrentSet() {
-		TestLevel level = this.CreateLevel(2, 3);
-		Reflect.SetField(this.sa2, "repetitionsInPlace", true);
-		SetSequenceCount(level, 100);
-		SetNext(level, 0);
-		SetRepetition(level, 1);
-		this.SetState(inWin: true, levelLoading: false);
+		StaHelper.RunSta(() => {
+			using HuntingTeacherForm form = BuildForm();
+			Reflect.SetField(this.sa2, "teacherForm", form);
+			TestLevel level = this.CreateLevel(2, 3);
+			Reflect.SetField(this.sa2, "repetitionsInPlace", true);
+			SetSequenceCount(level, 100);
+			SetNext(level, 0);
+			SetRepetition(level, 1);
+			this.SetState(inWin: true, levelLoading: false);
 
-		level.RunSequence();
+			level.RunSequence();
 
-		Assert.Equal(0x1001, this.GetData().p1Id);
-		Assert.Equal(1, GetNext(level));
-		Assert.Equal((byte)0, GetRepetition(level));
+			Assert.Equal(0x1001, this.GetData().p1Id);
+			Assert.Equal(1, GetNext(level));
+			Assert.Equal((byte)0, GetRepetition(level));
+		});
 	}
 
 	[Fact]
 	public void RunSequence_RepetitionsInPlace_WrapsToFirstSetAfterLastSetCompleted() {
-		TestLevel level = this.CreateLevel(2, 3);
-		Reflect.SetField(this.sa2, "repetitionsInPlace", true);
-		SetSequenceCount(level, 100);
-		SetNext(level, 2);
-		SetRepetition(level, 1);
-		this.SetState(inWin: true, levelLoading: false);
+		StaHelper.RunSta(() => {
+			using HuntingTeacherForm form = BuildForm();
+			Reflect.SetField(this.sa2, "teacherForm", form);
+			TestLevel level = this.CreateLevel(2, 3);
+			Reflect.SetField(this.sa2, "repetitionsInPlace", true);
+			SetSequenceCount(level, 100);
+			SetNext(level, 2);
+			SetRepetition(level, 1);
+			this.SetState(inWin: true, levelLoading: false);
 
-		level.RunSequence();
+			level.RunSequence();
 
-		Assert.Equal(0x1000, this.GetData().p1Id);
-		Assert.Equal(0, GetNext(level));
-		Assert.Equal((byte)0, GetRepetition(level));
+			Assert.Equal(0x1000, this.GetData().p1Id);
+			Assert.Equal(0, GetNext(level));
+			Assert.Equal((byte)0, GetRepetition(level));
+		});
 	}
 
 	[Fact]

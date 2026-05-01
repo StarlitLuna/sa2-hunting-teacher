@@ -2,6 +2,13 @@
 
 namespace sa2_hunting_teacher;
 
+public enum MspHints {
+	REVERSED,
+	FIXED,
+	ALTERNATING,
+	ALTERNATING_REVERSED
+}
+
 public class Settings {
 	/// <summary>
 	/// The default value of the Reversed Hints checkbox that appears for Mad Space
@@ -9,7 +16,7 @@ public class Settings {
 	/// When false (i.e. not checked), the hints in Mad Space will not be reversed (i.e. the hints will appear left to right readable)
 	/// Defaults to <c>false</c>.
 	/// </summary>
-	public bool MspReversedHints { get; set; } = false;
+	public MspHints MspHints { get; set; } = MspHints.ALTERNATING;
 
 	/// <summary>
 	/// Whether or not you will go back to the stage select menu after completing a set.

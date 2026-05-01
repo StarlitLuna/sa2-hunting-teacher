@@ -6,6 +6,14 @@ public partial class HuntingTeacherForm : Form {
 	private static TextBox? CurrentLogBox;
 	private readonly Settings settings;
 	private readonly UpdateManager updateManager;
+	private bool initializing = true;
+
+	private static readonly Dictionary<MspHints, string> MspHintsSettings = new Dictionary<MspHints, string> {
+		{ sa2_hunting_teacher.MspHints.FIXED, "Fixed" },
+		{ sa2_hunting_teacher.MspHints.REVERSED, "Reversed" },
+		{ sa2_hunting_teacher.MspHints.ALTERNATING, "Alternating" },
+		{ sa2_hunting_teacher.MspHints.ALTERNATING_REVERSED, "Alternating Reversed" }
+	};
 
 	public HuntingTeacherForm() {
 		InitializeComponent();
@@ -17,14 +25,20 @@ public partial class HuntingTeacherForm : Form {
 		this.settings = Settings.Load();
 		SupportedLevels.Configure(this.levelSelector, this.settings.CustomSequences, Level.WildCanyon);
 
+		this.mspHints.DisplayMember = "Value";
+		this.mspHints.ValueMember = "Key";
+		this.mspHints.DataSource = new BindingSource(MspHintsSettings, null);
+
 		InitializeSettings();
 		InitializeTooltips();
+
+		this.initializing = false;
 
 		Task.Run(this.updateManager.CheckForUpdates);
 	}
 
 	private void InitializeSettings() {
-		this.mspReverseHints.Checked = this.settings.MspReversedHints;
+		this.mspHints.SelectedValue = this.settings.MspHints;
 		this.backToMenu.Checked = this.settings.BackToMenu;
 		this.timerReset.Checked = this.settings.TimerReset;
 		this.inPlaceRepetitions.Checked = this.settings.RepetitionsInPlace;
@@ -32,10 +46,13 @@ public partial class HuntingTeacherForm : Form {
 	}
 
 	private void InitializeTooltips() {
-		this.reversedHintsTooltip.SetToolTip(
-			this.mspReverseHints,
-			"When enabled, hints in Mad Space will show up reversed (vanilla game behavior)\n" +
-			"When disabled, hints in Mad Space will show up human-readable (modded game behavior)"
+		this.mspHintsTooltip.SetToolTip(
+			this.mspHints,
+			"Reversed: Default game behavior, the hints show up backwards.\n" +
+			"Fixed: The hints get unreversed so they are readable.\n" +
+			"Alternating: Alternates between Fixed and Reversed. (Fixed hint first)\n" +
+			"Alternating Reversed: Alternates between Reversed and Fixed. (Reversed hint first)\n" +
+			"The alternating options require repetitions in place on and a minimum of 2 repetitions."
 		);
 
 		this.backToMenuTooltip.SetToolTip(
@@ -59,7 +76,11 @@ public partial class HuntingTeacherForm : Form {
 	}
 
 	private void SaveSettings() {
-		this.settings.MspReversedHints = this.mspReverseHints.Checked;
+		if (this.initializing) {
+			return;
+		}
+
+		this.settings.MspHints = (MspHints)this.mspHints.SelectedValue!;
 		this.settings.BackToMenu = this.backToMenu.Checked;
 		this.settings.TimerReset = this.timerReset.Checked;
 		this.settings.RepetitionsInPlace = this.inPlaceRepetitions.Checked;
@@ -74,8 +95,8 @@ public partial class HuntingTeacherForm : Form {
 
 		HuntingTeacherForm.CurrentLogBox.AppendText(value + Environment.NewLine);
 	}
-	public bool MspReversedHints() {
-		return this.mspReverseHints.Checked;
+	public MspHints MspHintsSelection() {
+		return (MspHints)this.mspHints.SelectedValue!;
 	}
 
 	public bool BackToMenu() {
@@ -94,7 +115,7 @@ public partial class HuntingTeacherForm : Form {
 		LevelRow selectedLevel = (LevelRow)this.levelSelector.SelectedItem!;
 		this.startBtn.Enabled = false;
 		this.repetitions.Enabled = false;
-		this.mspReverseHints.Enabled = false;
+		this.mspHints.Enabled = false;
 		this.backToMenu.Enabled = false;
 		this.timerReset.Enabled = false;
 		this.inPlaceRepetitions.Enabled = false;
@@ -130,19 +151,11 @@ public partial class HuntingTeacherForm : Form {
 		SA2Manager.Stop();
 		this.resetBtn.Enabled = false;
 		this.repetitions.Enabled = true;
-		this.mspReverseHints.Enabled = this.ShouldEnableMspReverseHints();
+		this.mspHints.Enabled = true;
 		this.backToMenu.Enabled = true;
 		this.timerReset.Enabled = true;
 		this.inPlaceRepetitions.Enabled = true;
 		this.startBtn.Enabled = true;
-	}
-
-	private bool ShouldEnableMspReverseHints() {
-		return this.levelSelector.SelectedItem != null && ((LevelRow)this.levelSelector.SelectedItem).Level == Level.MadSpace;
-	}
-
-	private void LevelSelector_SelectedIndexChanged(object sender, EventArgs e) {
-		this.mspReverseHints.Enabled = this.ShouldEnableMspReverseHints();
 	}
 
 	private void SettingsChanged(object sender, EventArgs e) {
@@ -154,5 +167,18 @@ public partial class HuntingTeacherForm : Form {
 		SetEditor editorForm = new(this.settings);
 		editorForm.ShowDialog(this);
 		SupportedLevels.Configure(this.levelSelector, this.settings.CustomSequences, previousLevel);
+	}
+
+	private void mspHints_SelectedIndexChanged(object sender, EventArgs e) {
+		MspHints selection = (MspHints)this.mspHints.SelectedValue!;
+		if (selection == MspHints.ALTERNATING || selection == MspHints.ALTERNATING_REVERSED) {
+			this.inPlaceRepetitions.Checked = true;
+			this.repetitions.Minimum = 2;
+			this.repetitions.Value = this.repetitions.Value >= 2 ? this.repetitions.Value : 2;
+		} else {
+			this.repetitions.Minimum = 1;
+		}
+
+		this.SaveSettings();
 	}
 }

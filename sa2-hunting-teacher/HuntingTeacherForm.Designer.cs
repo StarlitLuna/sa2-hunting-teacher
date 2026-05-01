@@ -32,12 +32,12 @@ partial class HuntingTeacherForm
 		components = new System.ComponentModel.Container();
 		System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(HuntingTeacherForm));
 		panel1 = new Panel();
+		mspHints = new ComboBox();
 		setEditor = new Button();
 		timerReset = new CheckBox();
 		inPlaceRepetitions = new CheckBox();
 		label3 = new Label();
 		backToMenu = new CheckBox();
-		mspReverseHints = new CheckBox();
 		label2 = new Label();
 		repetitions = new NumericUpDown();
 		resetBtn = new Button();
@@ -46,10 +46,11 @@ partial class HuntingTeacherForm
 		levelSelector = new GroupedComboBox();
 		panel2 = new Panel();
 		logBox = new TextBox();
-		reversedHintsTooltip = new ToolTip(components);
 		backToMenuTooltip = new ToolTip(components);
 		inPlaceRepetitionsTooltip = new ToolTip(components);
 		timerResetTooltip = new ToolTip(components);
+		mspHintsTooltip = new ToolTip(components);
+		mspHintsLabel = new Label();
 		panel1.SuspendLayout();
 		((System.ComponentModel.ISupportInitialize)repetitions).BeginInit();
 		panel2.SuspendLayout();
@@ -57,12 +58,13 @@ partial class HuntingTeacherForm
 		// 
 		// panel1
 		// 
+		panel1.Controls.Add(mspHintsLabel);
+		panel1.Controls.Add(mspHints);
 		panel1.Controls.Add(setEditor);
 		panel1.Controls.Add(timerReset);
 		panel1.Controls.Add(inPlaceRepetitions);
 		panel1.Controls.Add(label3);
 		panel1.Controls.Add(backToMenu);
-		panel1.Controls.Add(mspReverseHints);
 		panel1.Controls.Add(label2);
 		panel1.Controls.Add(repetitions);
 		panel1.Controls.Add(resetBtn);
@@ -74,6 +76,16 @@ partial class HuntingTeacherForm
 		panel1.Name = "panel1";
 		panel1.Size = new Size(855, 80);
 		panel1.TabIndex = 0;
+		// 
+		// mspHints
+		// 
+		mspHints.DropDownStyle = ComboBoxStyle.DropDownList;
+		mspHints.FormattingEnabled = true;
+		mspHints.Location = new Point(169, 48);
+		mspHints.Name = "mspHints";
+		mspHints.Size = new Size(151, 28);
+		mspHints.TabIndex = 12;
+		mspHints.SelectedIndexChanged += mspHints_SelectedIndexChanged;
 		// 
 		// setEditor
 		// 
@@ -90,7 +102,7 @@ partial class HuntingTeacherForm
 		timerReset.AutoSize = true;
 		timerReset.Checked = true;
 		timerReset.CheckState = CheckState.Checked;
-		timerReset.Location = new Point(369, 50);
+		timerReset.Location = new Point(455, 50);
 		timerReset.Name = "timerReset";
 		timerReset.Size = new Size(109, 24);
 		timerReset.TabIndex = 10;
@@ -101,9 +113,9 @@ partial class HuntingTeacherForm
 		// inPlaceRepetitions
 		// 
 		inPlaceRepetitions.AutoSize = true;
-		inPlaceRepetitions.Location = new Point(484, 50);
+		inPlaceRepetitions.Location = new Point(570, 50);
 		inPlaceRepetitions.Name = "inPlaceRepetitions";
-		inPlaceRepetitions.Size = new Size(157, 24);
+		inPlaceRepetitions.Size = new Size(161, 24);
 		inPlaceRepetitions.TabIndex = 9;
 		inPlaceRepetitions.Text = "Repetitions In Place";
 		inPlaceRepetitions.UseVisualStyleBackColor = true;
@@ -121,24 +133,13 @@ partial class HuntingTeacherForm
 		// backToMenu
 		// 
 		backToMenu.AutoSize = true;
-		backToMenu.Location = new Point(240, 50);
+		backToMenu.Location = new Point(326, 50);
 		backToMenu.Name = "backToMenu";
 		backToMenu.Size = new Size(123, 24);
 		backToMenu.TabIndex = 7;
 		backToMenu.Text = "Back To Menu";
 		backToMenu.UseVisualStyleBackColor = true;
 		backToMenu.CheckedChanged += SettingsChanged;
-		// 
-		// mspReverseHints
-		// 
-		mspReverseHints.AutoSize = true;
-		mspReverseHints.Location = new Point(105, 50);
-		mspReverseHints.Name = "mspReverseHints";
-		mspReverseHints.Size = new Size(129, 24);
-		mspReverseHints.TabIndex = 6;
-		mspReverseHints.Text = "Reversed Hints";
-		mspReverseHints.UseVisualStyleBackColor = true;
-		mspReverseHints.CheckedChanged += SettingsChanged;
 		// 
 		// label2
 		// 
@@ -203,7 +204,6 @@ partial class HuntingTeacherForm
 		levelSelector.Name = "levelSelector";
 		levelSelector.Size = new Size(245, 28);
 		levelSelector.TabIndex = 0;
-		levelSelector.SelectedIndexChanged += LevelSelector_SelectedIndexChanged;
 		// 
 		// panel2
 		// 
@@ -225,6 +225,15 @@ partial class HuntingTeacherForm
 		logBox.Size = new Size(855, 396);
 		logBox.TabIndex = 0;
 		logBox.WordWrap = false;
+		// 
+		// mspHintsLabel
+		// 
+		mspHintsLabel.AutoSize = true;
+		mspHintsLabel.Location = new Point(83, 51);
+		mspHintsLabel.Name = "mspHintsLabel";
+		mspHintsLabel.Size = new Size(80, 20);
+		mspHintsLabel.TabIndex = 13;
+		mspHintsLabel.Text = "MSp Hints:";
 		// 
 		// HuntingTeacherForm
 		// 
@@ -255,15 +264,16 @@ partial class HuntingTeacherForm
 	private TextBox logBox;
 	private NumericUpDown repetitions;
 	private Label label2;
-	private CheckBox mspReverseHints;
 	private GroupedComboBox levelSelector;
 	private Label label3;
 	private CheckBox backToMenu;
-	private ToolTip reversedHintsTooltip;
 	private ToolTip backToMenuTooltip;
 	private CheckBox inPlaceRepetitions;
 	private ToolTip inPlaceRepetitionsTooltip;
 	private CheckBox timerReset;
 	private ToolTip timerResetTooltip;
 	private Button setEditor;
+	private ComboBox mspHints;
+	private ToolTip mspHintsTooltip;
+	private Label mspHintsLabel;
 }

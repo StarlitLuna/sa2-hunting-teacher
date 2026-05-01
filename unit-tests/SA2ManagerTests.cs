@@ -1,5 +1,6 @@
 using sa2_hunting_teacher;
 using sa2_hunting_teacher.Knuckles;
+using sa2_hunting_teacher.Rouge;
 using System.Diagnostics;
 using System.IO.MemoryMappedFiles;
 using System.Runtime.CompilerServices;
@@ -16,11 +17,20 @@ public class SA2ManagerTests : IDisposable {
 	private readonly bool initialCanRun;
 	private readonly MemoryMappedFile? initialMapper;
 	private readonly TextBox? initialLogBox;
+	private readonly bool appDataDirExisted;
+	private readonly bool settingsFileExisted;
+	private readonly byte[]? backupContent;
 
 	public SA2ManagerTests() {
 		this.initialCanRun = Reflect.GetStatic<bool>(typeof(SA2Manager), "CanRun");
 		this.initialMapper = Reflect.GetStatic<MemoryMappedFile?>(typeof(SA2Manager), "MemoryMapper");
 		this.initialLogBox = Reflect.GetStatic<TextBox?>(typeof(HuntingTeacherForm), "CurrentLogBox");
+
+		this.appDataDirExisted = Directory.Exists(Settings.AppDataPath);
+		this.settingsFileExisted = File.Exists(Settings.SettingsPath);
+		if (this.settingsFileExisted) {
+			this.backupContent = File.ReadAllBytes(Settings.SettingsPath);
+		}
 
 		Reflect.SetStatic(typeof(SA2Manager), "CanRun", true);
 		Reflect.SetStatic(typeof(SA2Manager), "MemoryMapper", null);
@@ -44,6 +54,24 @@ public class SA2ManagerTests : IDisposable {
 
 		this.accessor.Dispose();
 		this.mmf.Dispose();
+
+		if (!Directory.Exists(Settings.AppDataPath)) {
+			Directory.CreateDirectory(Settings.AppDataPath);
+		}
+
+		if (this.settingsFileExisted) {
+			File.WriteAllBytes(Settings.SettingsPath, this.backupContent!);
+		} else if (File.Exists(Settings.SettingsPath)) {
+			File.Delete(Settings.SettingsPath);
+		}
+
+		if (!this.appDataDirExisted) {
+			try {
+				Directory.Delete(Settings.AppDataPath, recursive: false);
+			} catch {
+			}
+		}
+
 		GC.SuppressFinalize(this);
 	}
 
@@ -124,38 +152,46 @@ public class SA2ManagerTests : IDisposable {
 
 	[Fact]
 	public void ApplySet_WritesPieceIds_AndClearsLevelLoadingAndWinScreen() {
-		WildCanyon level = new(this.sa2, 1);
-		Reflect.SetField(this.sa2, "level", level);
-		this.DriveSequenceToCompletion(level);
-		this.SetField(new HunterTeacherData {
-			inWinScreen = true,
-			levelLoading = true,
-			p1Id = 0x1111,
-			p2Id = 0x2222,
-			p3Id = 0x3333,
+		StaHelper.RunSta(() => {
+			using HuntingTeacherForm form = BuildForm();
+			Reflect.SetField(this.sa2, "teacherForm", form);
+			WildCanyon level = new(this.sa2, 1);
+			Reflect.SetField(this.sa2, "level", level);
+			this.DriveSequenceToCompletion(level);
+			this.SetField(new HunterTeacherData {
+				inWinScreen = true,
+				levelLoading = true,
+				p1Id = 0x1111,
+				p2Id = 0x2222,
+				p3Id = 0x3333,
+			});
+
+			Set set = new(0xDEAD, 0xBEEF, 0xF00D, "left", "middle", "right");
+			this.sa2.ApplySet(set, 1, 1, 1);
+
+			HunterTeacherData data = this.GetField();
+			Assert.Equal(0xDEAD, data.p1Id);
+			Assert.Equal(0xBEEF, data.p2Id);
+			Assert.Equal(0xF00D, data.p3Id);
+			Assert.False(data.inWinScreen);
+			Assert.False(data.levelLoading);
 		});
-
-		Set set = new(0xDEAD, 0xBEEF, 0xF00D, "left", "middle", "right");
-		this.sa2.ApplySet(set, 1, 1, 1);
-
-		HunterTeacherData data = this.GetField();
-		Assert.Equal(0xDEAD, data.p1Id);
-		Assert.Equal(0xBEEF, data.p2Id);
-		Assert.Equal(0xF00D, data.p3Id);
-		Assert.False(data.inWinScreen);
-		Assert.False(data.levelLoading);
 	}
 
 	[Fact]
 	public void ApplySet_SetsSequenceComplete_FromLevelSequenceWillBeComplete() {
-		WildCanyon level = new(this.sa2, 1);
-		Reflect.SetField(this.sa2, "level", level);
-		this.DriveSequenceToCompletion(level);
+		StaHelper.RunSta(() => {
+			using HuntingTeacherForm form = BuildForm();
+			Reflect.SetField(this.sa2, "teacherForm", form);
+			WildCanyon level = new(this.sa2, 1);
+			Reflect.SetField(this.sa2, "level", level);
+			this.DriveSequenceToCompletion(level);
 
-		Set set = new(1, 2, 3, "p1", "p2", "p3");
-		this.sa2.ApplySet(set, 1, 1, 1);
+			Set set = new(1, 2, 3, "p1", "p2", "p3");
+			this.sa2.ApplySet(set, 1, 1, 1);
 
-		Assert.True(this.GetField().sequenceComplete);
+			Assert.True(this.GetField().sequenceComplete);
+		});
 	}
 
 	[Fact]
@@ -208,6 +244,122 @@ public class SA2ManagerTests : IDisposable {
 			this.sa2.ApplySet(set, 1, 1, 1);
 
 			Assert.Empty(logBox.Text);
+		});
+	}
+
+	[Theory]
+	[InlineData(MspHints.ALTERNATING, false)]
+	[InlineData(MspHints.ALTERNATING_REVERSED, true)]
+	public void ApplySet_FirstRep_ForcesStartingOrientation_WhenAlternating(MspHints selection, bool expectedReversed) {
+		StaHelper.RunSta(() => {
+			using HuntingTeacherForm form = BuildForm();
+			SetMspHints(form, selection);
+			Reflect.SetField(this.sa2, "teacherForm", form);
+			WildCanyon level = new(this.sa2, 1);
+			Reflect.SetField(this.sa2, "level", level);
+			this.DriveSequenceToCompletion(level);
+			this.SetField(new HunterTeacherData { mspReversedHints = !expectedReversed });
+
+			Set set = new(1, 2, 3, "p1", "p2", "p3");
+			this.sa2.ApplySet(set, 1, 1, 1);
+
+			Assert.Equal(expectedReversed, this.GetField().mspReversedHints);
+		});
+	}
+
+	[Theory]
+	[InlineData(MspHints.REVERSED)]
+	[InlineData(MspHints.FIXED)]
+	public void ApplySet_DoesNotToggleMspReversedHints_WhenNonAlternating(MspHints selection) {
+		StaHelper.RunSta(() => {
+			using HuntingTeacherForm form = BuildForm();
+			SetMspHints(form, selection);
+			Reflect.SetField(this.sa2, "teacherForm", form);
+			WildCanyon level = new(this.sa2, 1);
+			Reflect.SetField(this.sa2, "level", level);
+			this.DriveSequenceToCompletion(level);
+			this.SetField(new HunterTeacherData { mspReversedHints = true });
+
+			Set set = new(1, 2, 3, "p1", "p2", "p3");
+			this.sa2.ApplySet(set, 1, 1, 1);
+
+			Assert.True(this.GetField().mspReversedHints);
+		});
+	}
+
+	[Fact]
+	public void ApplySet_AlternatesAcrossRepetitions_WithinSingleSet_WhenAlternating() {
+		StaHelper.RunSta(() => {
+			using HuntingTeacherForm form = BuildForm();
+			SetMspHints(form, MspHints.ALTERNATING);
+			Reflect.SetField(this.sa2, "teacherForm", form);
+			WildCanyon level = new(this.sa2, 1);
+			Reflect.SetField(this.sa2, "level", level);
+			this.DriveSequenceToCompletion(level);
+			this.SetField(new HunterTeacherData { mspReversedHints = true });
+
+			Set set = new(1, 2, 3, "p1", "p2", "p3");
+			this.sa2.ApplySet(set, 1, 1, 1);
+			bool afterRep1 = this.GetField().mspReversedHints;
+			this.sa2.ApplySet(set, 1, 1, 2);
+			bool afterRep2 = this.GetField().mspReversedHints;
+			this.sa2.ApplySet(set, 1, 1, 3);
+			bool afterRep3 = this.GetField().mspReversedHints;
+
+			Assert.False(afterRep1);
+			Assert.True(afterRep2);
+			Assert.False(afterRep3);
+		});
+	}
+
+	[Theory]
+	[InlineData(MspHints.ALTERNATING)]
+	[InlineData(MspHints.ALTERNATING_REVERSED)]
+	public void ApplySet_NewSetFirstRep_MatchesPreviousSetFirstRep_WithEvenRepetitions(MspHints selection) {
+		StaHelper.RunSta(() => {
+			using HuntingTeacherForm form = BuildForm();
+			SetMspHints(form, selection);
+			Reflect.SetField(this.sa2, "teacherForm", form);
+			MadSpace level = new(this.sa2, 1);
+			Reflect.SetField(this.sa2, "level", level);
+			this.DriveSequenceToCompletion(level);
+			bool initialReversed = selection == MspHints.ALTERNATING;
+			this.SetField(new HunterTeacherData { mspReversedHints = initialReversed });
+
+			Set set = new(1, 2, 3, "p1", "p2", "p3");
+			this.sa2.ApplySet(set, 1, 1, 1);
+			bool firstSetFirstRep = this.GetField().mspReversedHints;
+			this.sa2.ApplySet(set, 1, 1, 2);
+			this.sa2.ApplySet(set, 1, 1, 1);
+			bool secondSetFirstRep = this.GetField().mspReversedHints;
+
+			Assert.Equal(firstSetFirstRep, secondSetFirstRep);
+		});
+	}
+
+	[Theory]
+	[InlineData(MspHints.ALTERNATING)]
+	[InlineData(MspHints.ALTERNATING_REVERSED)]
+	public void ApplySet_NewSetFirstRep_MatchesPreviousSetFirstRep_WithOddRepetitions(MspHints selection) {
+		StaHelper.RunSta(() => {
+			using HuntingTeacherForm form = BuildForm();
+			SetMspHints(form, selection);
+			Reflect.SetField(this.sa2, "teacherForm", form);
+			MadSpace level = new(this.sa2, 1);
+			Reflect.SetField(this.sa2, "level", level);
+			this.DriveSequenceToCompletion(level);
+			bool initialReversed = selection == MspHints.ALTERNATING;
+			this.SetField(new HunterTeacherData { mspReversedHints = initialReversed });
+
+			Set set = new(1, 2, 3, "p1", "p2", "p3");
+			this.sa2.ApplySet(set, 1, 1, 1);
+			bool firstSetFirstRep = this.GetField().mspReversedHints;
+			this.sa2.ApplySet(set, 1, 1, 2);
+			this.sa2.ApplySet(set, 1, 1, 3);
+			this.sa2.ApplySet(set, 1, 1, 1);
+			bool secondSetFirstRep = this.GetField().mspReversedHints;
+
+			Assert.Equal(firstSetFirstRep, secondSetFirstRep);
 		});
 	}
 
@@ -474,6 +626,11 @@ public class SA2ManagerTests : IDisposable {
 		HuntingTeacherForm form = new();
 		_ = form.Handle;
 		return form;
+	}
+
+	private static void SetMspHints(HuntingTeacherForm form, MspHints value) {
+		ComboBox combo = Reflect.GetField<ComboBox>(form, "mspHints");
+		combo.SelectedValue = value;
 	}
 
 	#endregion
