@@ -81,11 +81,7 @@ public partial class SA2Manager : IDisposable {
 			timerReset = teacherForm.TimerReset();
 		});
 
-		// Counter intuitively, we set reversed hints to true on ALTERNATING instead of ALTERNATING_REVERSED
-		// because ApplySet will set reversed hints to the opposite for the alternating settings
-		// so this value needs to be initially wrong when an alternating setting is set.
 		bool reversedHints = mspSelection == MspHints.REVERSED || mspSelection == MspHints.ALTERNATING;
-
 		this.repetitionsInPlace = repetitionsInPlace;
 		this.sharedMemory = SA2Manager.MemoryMapper.CreateViewAccessor();
 		this.ApplyDataDefaults(this.level.LevelId, reversedHints, backToMenu, timerReset);
