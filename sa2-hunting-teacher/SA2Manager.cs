@@ -255,8 +255,9 @@ public partial class SA2Manager : IDisposable {
 		using (SA2Manager instance = new(selection, repetitions, teacherForm, repetitionsInPlace)) {
 			while (SA2Manager.CanRun && !instance.level.SequenceComplete() && !instance.targetProcess.HasExited) {
 				instance.sharedMemory.Read(0, out instance.HunterTeacherData);
-				instance.level.RunSequence();
-				instance.sharedMemory.Write(0, ref instance.HunterTeacherData);
+				if (instance.level.RunSequence()) {
+					instance.sharedMemory.Write(0, ref instance.HunterTeacherData);
+				}
 			}
 
 			instance.HunterTeacherData.currentLevel = 0;
