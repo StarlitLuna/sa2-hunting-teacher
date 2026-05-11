@@ -3,6 +3,7 @@ using sa2_hunting_teacher.Knuckles;
 using sa2_hunting_teacher.Rouge;
 using System.Diagnostics;
 using System.IO.MemoryMappedFiles;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
@@ -93,6 +94,7 @@ public class SA2ManagerTests : IDisposable {
 
 		Assert.Equal((int)levelId, this.GetField().currentLevel);
 		Assert.Equal((int)levelId, this.ReadFromAccessor().currentLevel);
+		Assert.Equal((int)levelId, this.ReadIntField(nameof(HunterTeacherData.currentLevel)));
 	}
 
 	[Theory]
@@ -116,6 +118,9 @@ public class SA2ManagerTests : IDisposable {
 		Assert.Equal(msp, fromMemory.mspReversedHints);
 		Assert.Equal(backToMenu, fromMemory.backToMenu);
 		Assert.Equal(timerReset, fromMemory.timerReset);
+		Assert.Equal(msp, this.ReadBoolField(nameof(HunterTeacherData.mspReversedHints)));
+		Assert.Equal(backToMenu, this.ReadBoolField(nameof(HunterTeacherData.backToMenu)));
+		Assert.Equal(timerReset, this.ReadBoolField(nameof(HunterTeacherData.timerReset)));
 	}
 
 	[Fact]
@@ -144,6 +149,21 @@ public class SA2ManagerTests : IDisposable {
 		Assert.Equal(0, mem.p3Id);
 		Assert.False(mem.inWinScreen);
 		Assert.False(mem.sequenceComplete);
+		Assert.False(mem.levelLoading);
+
+		Assert.Equal(0, this.ReadIntField(nameof(HunterTeacherData.p1Id)));
+		Assert.Equal(0, this.ReadIntField(nameof(HunterTeacherData.p2Id)));
+		Assert.Equal(0, this.ReadIntField(nameof(HunterTeacherData.p3Id)));
+		Assert.False(this.ReadBoolField(nameof(HunterTeacherData.inWinScreen)));
+		Assert.False(this.ReadBoolField(nameof(HunterTeacherData.sequenceComplete)));
+		Assert.False(this.ReadBoolField(nameof(HunterTeacherData.levelLoading)));
+	}
+
+	[Fact]
+	public void ApplyDataDefaults_DoesNotUseSeparateDefaultWriteHelper() {
+		MethodInfo? method = typeof(SA2Manager).GetMethod("WriteHunterTeacherDataDefaults", BindingFlags.Instance | BindingFlags.NonPublic);
+
+		Assert.Null(method);
 	}
 
 	#endregion
@@ -151,7 +171,7 @@ public class SA2ManagerTests : IDisposable {
 	#region ApplySet
 
 	[Fact]
-	public void ApplySet_WritesPieceIds_AndClearsLevelLoadingAndWinScreen() {
+	public void ApplySet_UpdatesPendingData() {
 		StaHelper.RunSta(() => {
 			using HuntingTeacherForm form = BuildForm();
 			Reflect.SetField(this.sa2, "teacherForm", form);
@@ -175,6 +195,29 @@ public class SA2ManagerTests : IDisposable {
 			Assert.Equal(0xF00D, data.p3Id);
 			Assert.False(data.inWinScreen);
 			Assert.False(data.levelLoading);
+		});
+	}
+
+	[Fact]
+	public void ApplySet_ThenWriteHunterTeacherData_WritesSetAndClearsConsumedEvents() {
+		StaHelper.RunSta(() => {
+			using HuntingTeacherForm form = BuildForm();
+			Reflect.SetField(this.sa2, "teacherForm", form);
+			WildCanyon level = new(this.sa2, 1);
+			Reflect.SetField(this.sa2, "level", level);
+			this.WriteBoolField(nameof(HunterTeacherData.inWinScreen), true);
+			this.WriteBoolField(nameof(HunterTeacherData.levelLoading), true);
+			object events = Reflect.Invoke(this.sa2, "ReadHunterTeacherData")!;
+
+			Set set = new(0xDEAD, 0xBEEF, 0xF00D, "left", "middle", "right");
+			this.sa2.ApplySet(set, 1, 1, 1);
+			Reflect.Invoke(this.sa2, "WriteHunterTeacherData", events);
+
+			Assert.False(this.ReadBoolField(nameof(HunterTeacherData.inWinScreen)));
+			Assert.False(this.ReadBoolField(nameof(HunterTeacherData.levelLoading)));
+			Assert.Equal(0xDEAD, this.ReadIntField(nameof(HunterTeacherData.p1Id)));
+			Assert.Equal(0xBEEF, this.ReadIntField(nameof(HunterTeacherData.p2Id)));
+			Assert.Equal(0xF00D, this.ReadIntField(nameof(HunterTeacherData.p3Id)));
 		});
 	}
 
@@ -365,6 +408,80 @@ public class SA2ManagerTests : IDisposable {
 
 	#endregion
 
+	#region Shared memory field ownership
+
+	[Fact]
+	public void ReadHunterTeacherData_ReadsOnlyHelperOwnedEventFlags() {
+		this.WriteBoolField(nameof(HunterTeacherData.inWinScreen), true);
+		this.WriteBoolField(nameof(HunterTeacherData.levelLoading), true);
+		this.WriteIntField(nameof(HunterTeacherData.p1Id), 0xAAAA);
+		this.SetField(new HunterTeacherData { p1Id = 0x1111 });
+
+		object? events = Reflect.Invoke(this.sa2, "ReadHunterTeacherData");
+
+		HunterTeacherData data = this.GetField();
+		Assert.NotNull(events);
+		Assert.True(data.inWinScreen);
+		Assert.True(data.levelLoading);
+		Assert.Equal(0x1111, data.p1Id);
+	}
+
+	[Fact]
+	public void WriteHunterTeacherData_WritesManagerOwnedFieldsWithoutClearingUnobservedEvents() {
+		this.WriteBoolField(nameof(HunterTeacherData.inWinScreen), false);
+		this.WriteBoolField(nameof(HunterTeacherData.levelLoading), false);
+		object events = Reflect.Invoke(this.sa2, "ReadHunterTeacherData")!;
+		this.WriteBoolField(nameof(HunterTeacherData.inWinScreen), true);
+		this.WriteBoolField(nameof(HunterTeacherData.levelLoading), true);
+
+		this.WriteBoolField(nameof(HunterTeacherData.sequenceComplete), false);
+		this.WriteBoolField(nameof(HunterTeacherData.mspReversedHints), false);
+		this.WriteIntField(nameof(HunterTeacherData.p1Id), 0x1111);
+		this.WriteIntField(nameof(HunterTeacherData.p2Id), 0x2222);
+		this.WriteIntField(nameof(HunterTeacherData.p3Id), 0x3333);
+
+		this.SetField(new HunterTeacherData {
+			inWinScreen = false,
+			sequenceComplete = true,
+			levelLoading = false,
+			mspReversedHints = true,
+			p1Id = 0xAAAA,
+			p2Id = 0xBBBB,
+			p3Id = 0xCCCC,
+		});
+
+		Reflect.Invoke(this.sa2, "WriteHunterTeacherData", events);
+
+		Assert.True(this.ReadBoolField(nameof(HunterTeacherData.inWinScreen)));
+		Assert.True(this.ReadBoolField(nameof(HunterTeacherData.levelLoading)));
+		Assert.True(this.ReadBoolField(nameof(HunterTeacherData.sequenceComplete)));
+		Assert.True(this.ReadBoolField(nameof(HunterTeacherData.mspReversedHints)));
+		Assert.Equal(0xAAAA, this.ReadIntField(nameof(HunterTeacherData.p1Id)));
+		Assert.Equal(0xBBBB, this.ReadIntField(nameof(HunterTeacherData.p2Id)));
+		Assert.Equal(0xCCCC, this.ReadIntField(nameof(HunterTeacherData.p3Id)));
+	}
+
+	[Fact]
+	public void WriteHunterTeacherData_ClearsOnlyEventsObservedByLastRead() {
+		this.WriteBoolField(nameof(HunterTeacherData.inWinScreen), false);
+		this.WriteBoolField(nameof(HunterTeacherData.levelLoading), true);
+		object events = Reflect.Invoke(this.sa2, "ReadHunterTeacherData")!;
+		this.WriteBoolField(nameof(HunterTeacherData.inWinScreen), true);
+
+		HunterTeacherData data = this.GetField();
+		data.inWinScreen = false;
+		data.levelLoading = false;
+		data.p1Id = 0x1000;
+		this.SetField(data);
+
+		Reflect.Invoke(this.sa2, "WriteHunterTeacherData", events);
+
+		Assert.True(this.ReadBoolField(nameof(HunterTeacherData.inWinScreen)));
+		Assert.False(this.ReadBoolField(nameof(HunterTeacherData.levelLoading)));
+	}
+
+	#endregion
+
 	#region Simple getters
 
 	[Theory]
@@ -536,6 +653,60 @@ public class SA2ManagerTests : IDisposable {
 	}
 
 	[Fact]
+	public void HunterTeacherData_HasCppCompatibleSize() {
+		Assert.Equal(22, Marshal.SizeOf<HunterTeacherData>());
+	}
+
+	[Fact]
+	public void HunterTeacherData_HasCppCompatibleFieldOffsets() {
+		Dictionary<string, int> expected = new() {
+			[nameof(HunterTeacherData.currentLevel)] = 0,
+			[nameof(HunterTeacherData.inWinScreen)] = 4,
+			[nameof(HunterTeacherData.sequenceComplete)] = 5,
+			[nameof(HunterTeacherData.levelLoading)] = 6,
+			[nameof(HunterTeacherData.mspReversedHints)] = 7,
+			[nameof(HunterTeacherData.backToMenu)] = 8,
+			[nameof(HunterTeacherData.timerReset)] = 9,
+			[nameof(HunterTeacherData.p1Id)] = 10,
+			[nameof(HunterTeacherData.p2Id)] = 14,
+			[nameof(HunterTeacherData.p3Id)] = 18,
+		};
+
+		foreach ((string field, int offset) in expected) {
+			Assert.Equal(offset, Marshal.OffsetOf<HunterTeacherData>(field).ToInt32());
+		}
+	}
+
+	[Fact]
+	public void SA2Manager_StoresSharedMemoryOffsetsInSingleLayoutObject() {
+		FieldInfo field = typeof(SA2Manager).GetField("Offsets", BindingFlags.Static | BindingFlags.NonPublic)!;
+		Assert.NotNull(field);
+
+		object offsets = field.GetValue(null)!;
+		string[] properties = offsets.GetType()
+			.GetProperties(BindingFlags.Instance | BindingFlags.Public)
+			.Select(property => property.Name)
+			.ToArray();
+
+		Assert.Equal([
+			"InWinScreen",
+			"SequenceComplete",
+			"LevelLoading",
+			"MspReversedHints",
+			"P1Id",
+			"P2Id",
+			"P3Id",
+		], properties);
+		Assert.Equal(4L, ReadOffset(offsets, "InWinScreen"));
+		Assert.Equal(5L, ReadOffset(offsets, "SequenceComplete"));
+		Assert.Equal(6L, ReadOffset(offsets, "LevelLoading"));
+		Assert.Equal(7L, ReadOffset(offsets, "MspReversedHints"));
+		Assert.Equal(10L, ReadOffset(offsets, "P1Id"));
+		Assert.Equal(14L, ReadOffset(offsets, "P2Id"));
+		Assert.Equal(18L, ReadOffset(offsets, "P3Id"));
+	}
+
+	[Fact]
 	public void HunterTeacherData_HasExpectedFieldOrder() {
 		string[] expected = [
 			"currentLevel",
@@ -613,6 +784,32 @@ public class SA2ManagerTests : IDisposable {
 	private HunterTeacherData ReadFromAccessor() {
 		this.accessor.Read(0, out HunterTeacherData data);
 		return data;
+	}
+
+	private static long Offset(string field) {
+		return Marshal.OffsetOf<HunterTeacherData>(field).ToInt64();
+	}
+
+	private bool ReadBoolField(string field) {
+		return this.accessor.ReadBoolean(Offset(field));
+	}
+
+	private int ReadIntField(string field) {
+		return this.accessor.ReadInt32(Offset(field));
+	}
+
+	private void WriteBoolField(string field, bool value) {
+		this.accessor.Write(Offset(field), value);
+	}
+
+	private void WriteIntField(string field, int value) {
+		this.accessor.Write(Offset(field), value);
+	}
+
+	private static long ReadOffset(object offsets, string propertyName) {
+		PropertyInfo property = offsets.GetType().GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public)!;
+		Assert.NotNull(property);
+		return (long)property.GetValue(offsets)!;
 	}
 
 	private void DriveSequenceToCompletion(HuntingLevel level) {
