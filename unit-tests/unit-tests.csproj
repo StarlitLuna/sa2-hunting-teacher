@@ -10,6 +10,7 @@
     <IsTestProject>true</IsTestProject>
     <PlatformTarget>x86</PlatformTarget>
     <Platforms>x86</Platforms>
+    <PreserveCompilationContext>true</PreserveCompilationContext>
   </PropertyGroup>
 
   <ItemGroup>
