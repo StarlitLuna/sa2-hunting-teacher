@@ -1,6 +1,6 @@
 ﻿using SharpCompress.Archives;
-using SharpCompress.Archives.SevenZip;
 using SharpCompress.Common;
+using SharpCompress.Factories;
 using System.Diagnostics;
 
 namespace sa2_hunting_teacher.Updates;
@@ -122,8 +122,8 @@ public class UpdateManager {
 			};
 
 			using Stream stream = File.OpenRead(downloadPath);
-			using SevenZipArchive archive = SevenZipArchive.Open(stream);
-			foreach (SevenZipArchiveEntry entry in archive.Entries.Where((entry) => !entry.IsDirectory)) {
+			using IArchive archive = UpdateManager.OpenUpdateArchive(stream);
+			foreach (IArchiveEntry entry in archive.Entries.Where((entry) => !entry.IsDirectory)) {
 				await entry.WriteToDirectoryAsync(outputDir, options);
 			}
 		} catch (Exception) {
@@ -163,6 +163,19 @@ public class UpdateManager {
 		updateForm.Invoke(updateForm.Close);
 		Process.Start(exePath);
 		Application.Exit();
+	}
+
+	private static IArchive OpenUpdateArchive(Stream stream) {
+		SevenZipFactory factory = new();
+		if (!factory.IsArchive(stream, string.Empty)) {
+			throw new InvalidDataException("Update archive is not a SevenZip archive.");
+		}
+
+		if (stream.CanSeek) {
+			stream.Position = 0;
+		}
+
+		return factory.OpenArchive(stream);
 	}
 
 	private static void UpdateCleanup() {
