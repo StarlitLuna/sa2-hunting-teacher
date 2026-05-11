@@ -270,7 +270,7 @@ void HunterHelper::LoadEmeraldLocations(EmeraldManager* emManager) {
 	}
 
 	// if resetting pieces, wait for teacher to send new ones
-	while (HunterHelper::TeacherDataState->inWinScreen) {
+	while (HunterHelper::TeacherDataState->inWinScreen || HunterHelper::TeacherDataState->levelLoading) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	}
 

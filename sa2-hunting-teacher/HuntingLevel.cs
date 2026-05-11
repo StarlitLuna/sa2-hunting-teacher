@@ -37,22 +37,26 @@ public abstract class HuntingLevel(SA2Manager manager, byte repetitions) {
 		return SequenceCount >= (this.Sequence.Length * this.Repetitions) - 1;
 	}
 
-	public void RunSequence() {
-		if (this.Manager.IsInWinScreen() || this.Manager.IsLevelLoading()) {
-			if (this.Manager.IsInWinScreen()) {
-				this.Next = this.NextSequence();
-				this.SequenceCount++;
-			}
-
-			this.Manager.ApplySet(
-				this.Sequence[Next],
-				this.Next + 1,
-				this.Sequence.Length,
-				!this.Manager.RepetitionsInPlace()
-					? (int)Math.Ceiling((double)(this.SequenceCount + 1) / (double)this.Sequence.Length)
-					: (this.Repetition + 1)
-			);
+	public bool RunSequence() {
+		if (!this.Manager.IsInWinScreen() && !this.Manager.IsLevelLoading()) {
+			return false;
 		}
+
+		if (this.Manager.IsInWinScreen()) {
+			this.Next = this.NextSequence();
+			this.SequenceCount++;
+		}
+
+		this.Manager.ApplySet(
+			this.Sequence[Next],
+			this.Next + 1,
+			this.Sequence.Length,
+			!this.Manager.RepetitionsInPlace()
+				? (int)Math.Ceiling((double)(this.SequenceCount + 1) / (double)this.Sequence.Length)
+				: (this.Repetition + 1)
+		);
+
+		return true;
 	}
 
 	private int NextSequence() {

@@ -14,6 +14,7 @@ public partial class SA2Manager : IDisposable {
 	public const string HELPER_DLL_NAME = "hunting-teacher.helper.dll";
 	private static MemoryMappedFile? MemoryMapper;
 	private static bool CanRun = true;
+	private static readonly HunterTeacherDataOffsets Offsets = HunterTeacherDataOffsets.Create();
 
 	private IntPtr? sa2;
 	private readonly Process targetProcess;
@@ -22,6 +23,30 @@ public partial class SA2Manager : IDisposable {
 	private readonly MemoryMappedViewAccessor sharedMemory;
 	private readonly bool repetitionsInPlace;
 	private HunterTeacherData HunterTeacherData;
+
+	private readonly record struct HunterTeacherEvents(bool InWinScreen, bool LevelLoading);
+
+	private readonly record struct HunterTeacherDataOffsets(
+		long InWinScreen,
+		long SequenceComplete,
+		long LevelLoading,
+		long MspReversedHints,
+		long P1Id,
+		long P2Id,
+		long P3Id
+	) {
+		public static HunterTeacherDataOffsets Create() {
+			return new HunterTeacherDataOffsets(
+				FieldOffset(nameof(HunterTeacherData.inWinScreen)),
+				FieldOffset(nameof(HunterTeacherData.sequenceComplete)),
+				FieldOffset(nameof(HunterTeacherData.levelLoading)),
+				FieldOffset(nameof(HunterTeacherData.mspReversedHints)),
+				FieldOffset(nameof(HunterTeacherData.p1Id)),
+				FieldOffset(nameof(HunterTeacherData.p2Id)),
+				FieldOffset(nameof(HunterTeacherData.p3Id))
+			);
+		}
+	}
 
 	private SA2Manager(LevelRow selection, byte repetitions, HuntingTeacherForm teacherForm, bool repetitionsInPlace) {
 		this.teacherForm = teacherForm;
@@ -92,6 +117,7 @@ public partial class SA2Manager : IDisposable {
 		this.HunterTeacherData.currentLevel = (int)level;
 		this.HunterTeacherData.inWinScreen = false;
 		this.HunterTeacherData.sequenceComplete = false;
+		this.HunterTeacherData.levelLoading = false;
 		this.HunterTeacherData.mspReversedHints = mspReversedHints;
 		this.HunterTeacherData.backToMenu = backToMenu;
 		this.HunterTeacherData.timerReset = timerReset;
@@ -99,6 +125,28 @@ public partial class SA2Manager : IDisposable {
 		this.HunterTeacherData.p2Id = 0;
 		this.HunterTeacherData.p3Id = 0;
 		this.sharedMemory.Write(0, ref this.HunterTeacherData);
+	}
+
+	private HunterTeacherEvents ReadHunterTeacherData() {
+		this.HunterTeacherData.inWinScreen = this.sharedMemory.ReadBoolean(Offsets.InWinScreen);
+		this.HunterTeacherData.levelLoading = this.sharedMemory.ReadBoolean(Offsets.LevelLoading);
+		return new HunterTeacherEvents(this.HunterTeacherData.inWinScreen, this.HunterTeacherData.levelLoading);
+	}
+
+	private void WriteHunterTeacherData(HunterTeacherEvents events) {
+		this.sharedMemory.Write(Offsets.SequenceComplete, this.HunterTeacherData.sequenceComplete);
+		this.sharedMemory.Write(Offsets.MspReversedHints, this.HunterTeacherData.mspReversedHints);
+		this.sharedMemory.Write(Offsets.P1Id, this.HunterTeacherData.p1Id);
+		this.sharedMemory.Write(Offsets.P2Id, this.HunterTeacherData.p2Id);
+		this.sharedMemory.Write(Offsets.P3Id, this.HunterTeacherData.p3Id);
+
+		if (events.InWinScreen) {
+			this.sharedMemory.Write(Offsets.InWinScreen, false);
+		}
+
+		if (events.LevelLoading) {
+			this.sharedMemory.Write(Offsets.LevelLoading, false);
+		}
 	}
 
 	public void ApplySet(Set set, int seqCount, int seqTotal, int currentRep) {
@@ -236,6 +284,10 @@ public partial class SA2Manager : IDisposable {
 		return "Failed to inject helper to SA2 process.";
 	}
 
+	private static long FieldOffset(string fieldName) {
+		return Marshal.OffsetOf<HunterTeacherData>(fieldName).ToInt64();
+	}
+
 	private void CloseInjectionResources() {
 		if (SA2Manager.MemoryMapper != null) {
 			SA2Manager.MemoryMapper.Dispose();
@@ -254,9 +306,10 @@ public partial class SA2Manager : IDisposable {
 
 		using (SA2Manager instance = new(selection, repetitions, teacherForm, repetitionsInPlace)) {
 			while (SA2Manager.CanRun && !instance.level.SequenceComplete() && !instance.targetProcess.HasExited) {
-				instance.sharedMemory.Read(0, out instance.HunterTeacherData);
-				instance.level.RunSequence();
-				instance.sharedMemory.Write(0, ref instance.HunterTeacherData);
+				HunterTeacherEvents events = instance.ReadHunterTeacherData();
+				if (instance.level.RunSequence()) {
+					instance.WriteHunterTeacherData(events);
+				}
 			}
 
 			instance.HunterTeacherData.currentLevel = 0;
@@ -338,11 +391,17 @@ internal enum ProcessAccessFlags : uint {
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct HunterTeacherData {
 	public int currentLevel;
+	[MarshalAs(UnmanagedType.I1)]
 	public bool inWinScreen;
+	[MarshalAs(UnmanagedType.I1)]
 	public bool sequenceComplete;
+	[MarshalAs(UnmanagedType.I1)]
 	public bool levelLoading;
+	[MarshalAs(UnmanagedType.I1)]
 	public bool mspReversedHints;
+	[MarshalAs(UnmanagedType.I1)]
 	public bool backToMenu;
+	[MarshalAs(UnmanagedType.I1)]
 	public bool timerReset;
 	public int p1Id;
 	public int p2Id;
