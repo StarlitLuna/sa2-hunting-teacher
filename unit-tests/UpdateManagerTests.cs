@@ -100,6 +100,35 @@ public class UpdateManagerTests {
 	}
 
 	[Fact]
+	public async Task PerformUpdate_ForcesPayloadDownloadUrlToHttpsDefaultPort() {
+		StubHttpMessageHandler handler = new(_ => new HttpResponseMessage(HttpStatusCode.InternalServerError));
+		UpdateManager manager = BuildManager(handler);
+		SetLatestTag(manager, "v2.0.0");
+		Release release = new() {
+			Assets = [
+				new ReleaseAsset {
+					Name = "sa2-hunting-teacher.7z",
+					BrowserDownloadUrl = new Uri("http://downloads.example.test:8080/update.7z?next=http://downloads.example.test/fallback"),
+					Digest = "sha256:4ec21996023342216e26288875756414f96c7ec997cf7e51d46bd636bb5790e6"
+				}
+			]
+		};
+
+		await InTemporaryCurrentDirectory(async _ => {
+			await Record.ExceptionAsync(() => manager.PerformUpdate(null!, release));
+		});
+
+		HttpRequestMessage request = Assert.Single(handler.Requests);
+		Assert.NotNull(request.RequestUri);
+		Uri requestUri = request.RequestUri;
+		Assert.Equal(Uri.UriSchemeHttps, requestUri.Scheme);
+		Assert.True(requestUri.IsDefaultPort);
+		Assert.Equal("downloads.example.test", requestUri.Host);
+		Assert.Equal("/update.7z", requestUri.AbsolutePath);
+		Assert.Equal("?next=http://downloads.example.test/fallback", requestUri.Query);
+	}
+
+	[Fact]
 	public void VerifyFileHash_ReturnsTrue_WhenSha256DigestMatches() {
 		InTemporaryCurrentDirectory(temp => {
 			string file = Path.Combine(temp, "update.7z");

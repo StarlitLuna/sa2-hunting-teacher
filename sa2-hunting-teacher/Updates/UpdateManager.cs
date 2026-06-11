@@ -46,7 +46,7 @@ public class UpdateManager {
 		}
 
 		string currentVersion = "v" + Application.ProductVersion;
-		if (currentVersion.Equals(release.TagName) && false) {
+		if (currentVersion.Equals(release.TagName)) {
 			return;
 		}
 
@@ -91,7 +91,12 @@ public class UpdateManager {
 		string downloadPath = Path.Join(outputDir, UpdateManager.ASSET_NAME);
 
 		try {
-			HttpResponseMessage download = await this.client.GetAsync(newVersion.BrowserDownloadUrl);
+			UriBuilder downloadUrlBuilder = new(newVersion.BrowserDownloadUrl) {
+				Scheme = Uri.UriSchemeHttps,
+				Port = -1
+			};
+
+			HttpResponseMessage download = await this.client.GetAsync(downloadUrlBuilder.Uri);
 			download.EnsureSuccessStatusCode();
 
 			using (FileStream fileStream = new(downloadPath, FileMode.CreateNew)) {
