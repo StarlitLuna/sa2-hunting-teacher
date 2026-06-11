@@ -1,7 +1,9 @@
 ﻿using SharpCompress.Archives;
 using SharpCompress.Common;
 using SharpCompress.Factories;
+using SharpCompress.Readers;
 using System.Diagnostics;
+using System.Security.Cryptography;
 
 namespace sa2_hunting_teacher.Updates;
 
@@ -89,11 +91,21 @@ public class UpdateManager {
 		string downloadPath = Path.Join(outputDir, UpdateManager.ASSET_NAME);
 
 		try {
-			HttpResponseMessage download = await this.client.GetAsync(newVersion.BrowserDownloadUrl);
+			UriBuilder downloadUrlBuilder = new(newVersion.BrowserDownloadUrl) {
+				Scheme = Uri.UriSchemeHttps,
+				Port = -1
+			};
+
+			HttpResponseMessage download = await this.client.GetAsync(downloadUrlBuilder.Uri);
 			download.EnsureSuccessStatusCode();
 
-			using FileStream fileStream = new(downloadPath, FileMode.CreateNew);
-			await download.Content.CopyToAsync(fileStream);
+			using (FileStream fileStream = new(downloadPath, FileMode.CreateNew)) {
+				await download.Content.CopyToAsync(fileStream);
+			}
+
+			if (!UpdateManager.VerifyFileHash(downloadPath, newVersion.Digest)) {
+				throw new InvalidDataException("Downloaded update payload hash did not match release digest.");
+			}
 		} catch (Exception) {
 			if (File.Exists(downloadPath)) {
 				File.Delete(downloadPath);
@@ -167,7 +179,7 @@ public class UpdateManager {
 
 	private static IArchive OpenUpdateArchive(Stream stream) {
 		SevenZipFactory factory = new();
-		if (!factory.IsArchive(stream, string.Empty)) {
+		if (!factory.IsArchive(stream, ReaderOptions.ForExternalStream)) {
 			throw new InvalidDataException("Update archive is not a SevenZip archive.");
 		}
 
@@ -176,6 +188,38 @@ public class UpdateManager {
 		}
 
 		return factory.OpenArchive(stream);
+	}
+
+	private static bool VerifyFileHash(string filePath, string hash) {
+		try {
+			if (string.IsNullOrWhiteSpace(hash)) {
+				return false;
+			}
+
+			string[] hashParts = hash.Split(':', 2, StringSplitOptions.TrimEntries);
+			if (hashParts.Length != 2 || string.IsNullOrWhiteSpace(hashParts[0]) || string.IsNullOrWhiteSpace(hashParts[1])) {
+				return false;
+			}
+
+			using HashAlgorithm? algorithm = hashParts[0].ToLowerInvariant() switch {
+				"sha256" => SHA256.Create(),
+				"sha384" => SHA384.Create(),
+				"sha512" => SHA512.Create(),
+				_ => null
+			};
+
+			if (algorithm == null) {
+				return false;
+			}
+
+			byte[] expectedHash = Convert.FromHexString(hashParts[1]);
+			using FileStream stream = File.OpenRead(filePath);
+			byte[] actualHash = algorithm.ComputeHash(stream);
+
+			return CryptographicOperations.FixedTimeEquals(actualHash, expectedHash);
+		} catch (Exception) {}
+
+		return false;
 	}
 
 	private static void UpdateCleanup() {

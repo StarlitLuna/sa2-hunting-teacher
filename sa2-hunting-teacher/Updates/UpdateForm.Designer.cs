@@ -26,6 +26,7 @@ partial class UpdateForm {
 	private void InitializeComponent() {
 		System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UpdateForm));
 		splitContainer1 = new SplitContainer();
+		changeLog = new RichTextBox();
 		infoLabel1 = new Label();
 		infoLabel2 = new Label();
 		spinnerIcon = new PictureBox();
@@ -47,6 +48,7 @@ partial class UpdateForm {
 		// 
 		// splitContainer1.Panel1
 		// 
+		splitContainer1.Panel1.Controls.Add(changeLog);
 		splitContainer1.Panel1.Controls.Add(infoLabel1);
 		splitContainer1.Panel1.Controls.Add(infoLabel2);
 		splitContainer1.Panel1.Paint += SplitContainer1_Panel1_Paint;
@@ -59,35 +61,44 @@ partial class UpdateForm {
 		splitContainer1.Panel2.Controls.Add(yesBtn);
 		splitContainer1.Panel2.Controls.Add(noBtn);
 		splitContainer1.Panel2MinSize = 0;
-		splitContainer1.Size = new Size(372, 193);
-		splitContainer1.SplitterDistance = 123;
+		splitContainer1.Size = new Size(588, 339);
+		splitContainer1.SplitterDistance = 268;
 		splitContainer1.SplitterWidth = 1;
 		splitContainer1.TabIndex = 0;
+		// 
+		// changeLog
+		// 
+		changeLog.Location = new Point(87, 53);
+		changeLog.Name = "changeLog";
+		changeLog.ReadOnly = true;
+		changeLog.Size = new Size(485, 156);
+		changeLog.TabIndex = 3;
+		changeLog.Text = "";
 		// 
 		// infoLabel1
 		// 
 		infoLabel1.AutoSize = true;
-		infoLabel1.Location = new Point(12, 29);
+		infoLabel1.Location = new Point(16, 18);
 		infoLabel1.Name = "infoLabel1";
-		infoLabel1.Size = new Size(108, 20);
+		infoLabel1.Size = new Size(180, 20);
 		infoLabel1.TabIndex = 0;
-		infoLabel1.Text = "A new version: ";
+		infoLabel1.Text = "A new version was found: ";
 		// 
 		// infoLabel2
 		// 
 		infoLabel2.AutoSize = true;
-		infoLabel2.Location = new Point(12, 49);
+		infoLabel2.Location = new Point(16, 218);
 		infoLabel2.Name = "infoLabel2";
-		infoLabel2.Size = new Size(292, 20);
+		infoLabel2.Size = new Size(215, 20);
 		infoLabel2.TabIndex = 2;
-		infoLabel2.Text = "Was found. Would you like to update now?";
+		infoLabel2.Text = "Would you like to update now?";
 		// 
 		// spinnerIcon
 		// 
 		spinnerIcon.BackColor = SystemColors.ButtonHighlight;
 		spinnerIcon.Image = (Image)resources.GetObject("spinnerIcon.Image");
 		spinnerIcon.InitialImage = null;
-		spinnerIcon.Location = new Point(163, 16);
+		spinnerIcon.Location = new Point(377, 24);
 		spinnerIcon.Name = "spinnerIcon";
 		spinnerIcon.Size = new Size(20, 20);
 		spinnerIcon.TabIndex = 2;
@@ -96,7 +107,7 @@ partial class UpdateForm {
 		// 
 		// yesBtn
 		// 
-		yesBtn.Location = new Point(153, 12);
+		yesBtn.Location = new Point(367, 20);
 		yesBtn.Name = "yesBtn";
 		yesBtn.Size = new Size(94, 29);
 		yesBtn.TabIndex = 1;
@@ -106,7 +117,7 @@ partial class UpdateForm {
 		// 
 		// noBtn
 		// 
-		noBtn.Location = new Point(253, 12);
+		noBtn.Location = new Point(467, 20);
 		noBtn.Name = "noBtn";
 		noBtn.Size = new Size(94, 29);
 		noBtn.TabIndex = 0;
@@ -118,7 +129,7 @@ partial class UpdateForm {
 		// 
 		AutoScaleDimensions = new SizeF(8F, 20F);
 		AutoScaleMode = AutoScaleMode.Font;
-		ClientSize = new Size(372, 193);
+		ClientSize = new Size(588, 339);
 		ControlBox = false;
 		Controls.Add(splitContainer1);
 		FormBorderStyle = FormBorderStyle.FixedDialog;
@@ -148,4 +159,5 @@ partial class UpdateForm {
 	private Button noBtn;
 	private Button yesBtn;
 	private PictureBox spinnerIcon;
+	private RichTextBox changeLog;
 }

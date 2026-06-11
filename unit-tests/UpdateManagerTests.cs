@@ -100,6 +100,75 @@ public class UpdateManagerTests {
 	}
 
 	[Fact]
+	public async Task PerformUpdate_ForcesPayloadDownloadUrlToHttpsDefaultPort() {
+		StubHttpMessageHandler handler = new(_ => new HttpResponseMessage(HttpStatusCode.InternalServerError));
+		UpdateManager manager = BuildManager(handler);
+		SetLatestTag(manager, "v2.0.0");
+		Release release = new() {
+			Assets = [
+				new ReleaseAsset {
+					Name = "sa2-hunting-teacher.7z",
+					BrowserDownloadUrl = new Uri("http://downloads.example.test:8080/update.7z?next=http://downloads.example.test/fallback"),
+					Digest = "sha256:4ec21996023342216e26288875756414f96c7ec997cf7e51d46bd636bb5790e6"
+				}
+			]
+		};
+
+		await InTemporaryCurrentDirectory(async _ => {
+			await Record.ExceptionAsync(() => manager.PerformUpdate(null!, release));
+		});
+
+		HttpRequestMessage request = Assert.Single(handler.Requests);
+		Assert.NotNull(request.RequestUri);
+		Uri requestUri = request.RequestUri;
+		Assert.Equal(Uri.UriSchemeHttps, requestUri.Scheme);
+		Assert.True(requestUri.IsDefaultPort);
+		Assert.Equal("downloads.example.test", requestUri.Host);
+		Assert.Equal("/update.7z", requestUri.AbsolutePath);
+		Assert.Equal("?next=http://downloads.example.test/fallback", requestUri.Query);
+	}
+
+	[Fact]
+	public void VerifyFileHash_ReturnsTrue_WhenSha256DigestMatches() {
+		InTemporaryCurrentDirectory(temp => {
+			string file = Path.Combine(temp, "update.7z");
+			File.WriteAllText(file, "upgrade payload");
+
+			bool matches = VerifyFileHash(file, "sha256:4ec21996023342216e26288875756414f96c7ec997cf7e51d46bd636bb5790e6");
+
+			Assert.True(matches);
+		});
+	}
+
+	[Fact]
+	public void VerifyFileHash_ReturnsFalse_WhenSha256DigestMismatches() {
+		InTemporaryCurrentDirectory(temp => {
+			string file = Path.Combine(temp, "update.7z");
+			File.WriteAllText(file, "tampered payload");
+
+			bool matches = VerifyFileHash(file, "sha256:4ec21996023342216e26288875756414f96c7ec997cf7e51d46bd636bb5790e6");
+
+			Assert.False(matches);
+		});
+	}
+
+	[Theory]
+	[InlineData("")]
+	[InlineData("sha256")]
+	[InlineData("sha256:not-hex")]
+	[InlineData("sha999:4ec21996023342216e26288875756414f96c7ec997cf7e51d46bd636bb5790e6")]
+	public void VerifyFileHash_ReturnsFalse_WhenDigestCannotBeChecked(string digest) {
+		InTemporaryCurrentDirectory(temp => {
+			string file = Path.Combine(temp, "update.7z");
+			File.WriteAllText(file, "upgrade payload");
+
+			bool matches = VerifyFileHash(file, digest);
+
+			Assert.False(matches);
+		});
+	}
+
+	[Fact]
 	public void OpenUpdateArchive_OpensSevenZipArchives() {
 		using MemoryStream archiveStream = BuildSevenZipArchive();
 
@@ -276,6 +345,12 @@ public class UpdateManagerTests {
 		MethodInfo method = typeof(UpdateManager).GetMethod("OpenUpdateArchive", BindingFlags.Static | BindingFlags.NonPublic)!;
 		Assert.NotNull(method);
 		return method.Invoke(null, [stream]);
+	}
+
+	private static bool VerifyFileHash(string path, string digest) {
+		MethodInfo method = typeof(UpdateManager).GetMethod("VerifyFileHash", BindingFlags.Static | BindingFlags.NonPublic)!;
+		Assert.NotNull(method);
+		return (bool)method.Invoke(null, [path, digest])!;
 	}
 
 	private static void InvokeStatic(string methodName) {
