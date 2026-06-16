@@ -52,6 +52,19 @@ public class HuntingSetReferenceDataTests {
 					PumpkinHillHintOverrides()
 				)
 			];
+
+			yield return [
+				new ReferenceCase(
+					"Aquatic Mine",
+					((int)LevelId.AquaticMine).ToString(CultureInfo.InvariantCulture),
+					Level.AquaticMine,
+					Path.Combine("SetData", "KnucklesSets.json"),
+					Path.Combine("TestData", "Knuckles", "AquaticMine.csv"),
+					AquaticMine.PieceToHint,
+					1024,
+					new Dictionary<HintOverrideKey, int>()
+				)
+			];
 		}
 	}
 
