@@ -31,6 +31,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="TestData\Knuckles\WildCanyon.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\sa2-hunting-teacher\Knuckles\KnucklesSets.json" Link="SetData\KnucklesSets.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>
 
