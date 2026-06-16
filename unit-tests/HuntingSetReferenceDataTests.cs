@@ -22,7 +22,25 @@ public class HuntingSetReferenceDataTests {
 					Path.Combine("SetData", "KnucklesSets.json"),
 					Path.Combine("TestData", "Knuckles", "WildCanyon.csv"),
 					WildCanyon.PieceToHint,
-					1024
+					1024,
+					new Dictionary<HintOverrideKey, int>()
+				)
+			];
+
+			yield return [
+				new ReferenceCase(
+					"Pumpkin Hill",
+					(int)LevelId.PumpkinHill,
+					Level.PumpkinHill,
+					Path.Combine("SetData", "KnucklesSets.json"),
+					Path.Combine("TestData", "Knuckles", "PumpkinHill.csv"),
+					PumpkinHill.PieceToHint,
+					1024,
+					new Dictionary<HintOverrideKey, int> {
+						{ new HintOverrideKey(0, "King of the hill."), 0x000A },
+						{ new HintOverrideKey(1, "King of the hill."), 0x000A },
+						{ new HintOverrideKey(2, "King of the hill."), 0x0004 }
+					}
 				)
 			];
 		}
@@ -92,6 +110,21 @@ public class HuntingSetReferenceDataTests {
 		string csvHint,
 		HashSet<int> allowedIds
 	) {
+		if (referenceCase.HintOverrides.TryGetValue(new HintOverrideKey(columnIndex, csvHint), out int overrideId)) {
+			Assert.True(
+				allowedIds.Contains(overrideId),
+				$"{referenceCase.Name}: set {setId} {PieceColumnNames[columnIndex]} override " +
+				$"{overrideId} (0x{overrideId:X4}) is not valid for this column."
+			);
+			Assert.True(
+				referenceCase.PieceToHint.TryGetValue(overrideId, out string? overrideHint) && overrideHint == csvHint,
+				$"{referenceCase.Name}: set {setId} {PieceColumnNames[columnIndex]} override " +
+				$"{overrideId} (0x{overrideId:X4}) does not match hint '{csvHint}'."
+			);
+
+			return overrideId;
+		}
+
 		List<int> matches = allowedIds
 			.Where(id => referenceCase.PieceToHint.TryGetValue(id, out string? hint) && hint == csvHint)
 			.Distinct()
@@ -201,6 +234,9 @@ public class HuntingSetReferenceDataTests {
 		string SetsJsonPath,
 		string CsvPath,
 		IReadOnlyDictionary<int, string> PieceToHint,
-		int ExpectedSetCount
+		int ExpectedSetCount,
+		IReadOnlyDictionary<HintOverrideKey, int> HintOverrides
 	);
+
+	public sealed record HintOverrideKey(int ColumnIndex, string Hint);
 }
