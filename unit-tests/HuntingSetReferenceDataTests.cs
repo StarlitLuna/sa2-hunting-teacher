@@ -78,6 +78,19 @@ public class HuntingSetReferenceDataTests {
 					new Dictionary<HintOverrideKey, int>()
 				)
 			];
+
+			yield return [
+				new ReferenceCase(
+					"Meteor Herd",
+					((int)LevelId.MeteorHerd).ToString(CultureInfo.InvariantCulture),
+					Level.MeteorHerd,
+					Path.Combine("SetData", "KnucklesSets.json"),
+					Path.Combine("TestData", "Knuckles", "MeteorHerd.csv"),
+					MeteorHerd.PieceToHint,
+					1024,
+					new Dictionary<HintOverrideKey, int>()
+				)
+			];
 		}
 	}
 

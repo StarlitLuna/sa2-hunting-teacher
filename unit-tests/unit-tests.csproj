@@ -46,6 +46,9 @@
     <None Update="TestData\Knuckles\DeathChamber.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="TestData\Knuckles\MeteorHerd.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="..\sa2-hunting-teacher\Knuckles\KnucklesSets.json" Link="SetData\KnucklesSets.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
