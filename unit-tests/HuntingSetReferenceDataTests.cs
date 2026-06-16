@@ -65,6 +65,19 @@ public class HuntingSetReferenceDataTests {
 					new Dictionary<HintOverrideKey, int>()
 				)
 			];
+
+			yield return [
+				new ReferenceCase(
+					"Death Chamber",
+					((int)LevelId.DeathChamber).ToString(CultureInfo.InvariantCulture),
+					Level.DeathChamber,
+					Path.Combine("SetData", "KnucklesSets.json"),
+					Path.Combine("TestData", "Knuckles", "DeathChamber.csv"),
+					DeathChamber.PieceToHint,
+					1024,
+					new Dictionary<HintOverrideKey, int>()
+				)
+			];
 		}
 	}
 
