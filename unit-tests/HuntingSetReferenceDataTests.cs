@@ -1,6 +1,7 @@
 using Microsoft.VisualBasic.FileIO;
 using sa2_hunting_teacher;
 using sa2_hunting_teacher.Knuckles;
+using sa2_hunting_teacher.Rouge;
 using System.Diagnostics;
 using System.Globalization;
 using System.Text.Json;
@@ -91,6 +92,73 @@ public class HuntingSetReferenceDataTests {
 					new Dictionary<HintOverrideKey, int>()
 				)
 			];
+
+			yield return [
+				new ReferenceCase(
+					"Security Hall",
+					((int)LevelId.SecurityHall).ToString(CultureInfo.InvariantCulture),
+					Level.SecurityHall,
+					Path.Combine("SetData", "RougeSets.json"),
+					Path.Combine("TestData", "Rouge", "SecurityHall.csv"),
+					SecurityHall.PieceToHint,
+					1024,
+					new Dictionary<HintOverrideKey, int>()
+				)
+			];
+
+			yield return [
+				new ReferenceCase(
+					"Dry Lagoon",
+					((int)LevelId.DryLagoon).ToString(CultureInfo.InvariantCulture),
+					Level.DryLagoon,
+					Path.Combine("SetData", "RougeSets.json"),
+					Path.Combine("TestData", "Rouge", "DryLagoon.csv"),
+					DryLagoon.PieceToHint,
+					1024,
+					new Dictionary<HintOverrideKey, int>()
+				)
+			];
+
+			yield return [
+				new ReferenceCase(
+					"Egg Quarters",
+					((int)LevelId.EggQuarters).ToString(CultureInfo.InvariantCulture),
+					Level.EggQuarters,
+					Path.Combine("SetData", "RougeSets.json"),
+					Path.Combine("TestData", "Rouge", "EggQuarters.csv"),
+					EggQuarters.PieceToHint,
+					1024,
+					new Dictionary<HintOverrideKey, int>()
+				)
+			];
+
+			yield return [
+				new ReferenceCase(
+					"Egg Quarters Story",
+					((int)LevelId.EggQuarters).ToString(CultureInfo.InvariantCulture) + "-story",
+					Level.EggQuarters,
+					Path.Combine("SetData", "RougeSets.json"),
+					Path.Combine("TestData", "Rouge", "EggQuartersStory.csv"),
+					EggQuarters.PieceToHint,
+					1024,
+					new Dictionary<HintOverrideKey, int>()
+				)
+			];
+
+			yield return [
+				new ReferenceCase(
+					"Mad Space",
+					((int)LevelId.MadSpace).ToString(CultureInfo.InvariantCulture),
+					Level.MadSpace,
+					Path.Combine("SetData", "RougeSets.json"),
+					Path.Combine("TestData", "Rouge", "MadSpace.csv"),
+					MadSpace.PieceToHint,
+					1024,
+					new Dictionary<HintOverrideKey, int>(),
+					HintTransform.MadSpaceReverse,
+					StringComparison.OrdinalIgnoreCase
+				)
+			];
 		}
 	}
 
@@ -146,9 +214,9 @@ public class HuntingSetReferenceDataTests {
 			expectedSets.Add(
 				setId.ToString(CultureInfo.InvariantCulture),
 				[
-					ResolveHint(referenceCase, setId, 0, fields[1], allowedIdsByColumn[0]),
-					ResolveHint(referenceCase, setId, 1, fields[2], allowedIdsByColumn[1]),
-					ResolveHint(referenceCase, setId, 2, fields[3], allowedIdsByColumn[2])
+					ResolveHint(referenceCase, setId, 0, ApplyHintTransform(referenceCase, fields[1]), allowedIdsByColumn[0]),
+					ResolveHint(referenceCase, setId, 1, ApplyHintTransform(referenceCase, fields[2]), allowedIdsByColumn[1]),
+					ResolveHint(referenceCase, setId, 2, ApplyHintTransform(referenceCase, fields[3]), allowedIdsByColumn[2])
 				]
 			);
 
@@ -173,7 +241,8 @@ public class HuntingSetReferenceDataTests {
 				$"{overrideId} (0x{overrideId:X4}) is not valid for this column."
 			);
 			Assert.True(
-				referenceCase.PieceToHint.TryGetValue(overrideId, out string? overrideHint) && overrideHint == csvHint,
+				referenceCase.PieceToHint.TryGetValue(overrideId, out string? overrideHint) &&
+					string.Equals(overrideHint, csvHint, referenceCase.HintComparison),
 				$"{referenceCase.Name}: set {setId} {PieceColumnNames[columnIndex]} override " +
 				$"{overrideId} (0x{overrideId:X4}) does not match hint '{csvHint}'."
 			);
@@ -182,7 +251,8 @@ public class HuntingSetReferenceDataTests {
 		}
 
 		List<int> matches = allowedIds
-			.Where(id => referenceCase.PieceToHint.TryGetValue(id, out string? hint) && hint == csvHint)
+			.Where(id => referenceCase.PieceToHint.TryGetValue(id, out string? hint) &&
+				string.Equals(hint, csvHint, referenceCase.HintComparison))
 			.Distinct()
 			.Order()
 			.ToList();
@@ -194,7 +264,7 @@ public class HuntingSetReferenceDataTests {
 		string columnName = PieceColumnNames[columnIndex];
 		if (matches.Count == 0) {
 			List<int> allDictionaryMatches = referenceCase.PieceToHint
-				.Where(kvp => kvp.Value == csvHint)
+				.Where(kvp => string.Equals(kvp.Value, csvHint, referenceCase.HintComparison))
 				.Select(kvp => kvp.Key)
 				.Order()
 				.ToList();
@@ -211,6 +281,36 @@ public class HuntingSetReferenceDataTests {
 		);
 
 		throw new UnreachableException();
+	}
+
+	private static string ApplyHintTransform(ReferenceCase referenceCase, string csvHint) {
+		return referenceCase.HintTransform switch {
+			HintTransform.None => csvHint,
+			HintTransform.MadSpaceReverse => ReverseMadSpaceHint(csvHint),
+			_ => throw new UnreachableException()
+		};
+	}
+
+	private static string ReverseMadSpaceHint(string csvHint) {
+		int closeParenthesis = csvHint.LastIndexOf(')');
+		if (closeParenthesis != csvHint.Length - 1) {
+			return ReverseString(csvHint).Trim();
+		}
+
+		int openParenthesis = csvHint.LastIndexOf('(');
+		if (openParenthesis < 0) {
+			return ReverseString(csvHint).Trim();
+		}
+
+		string beforeParentheses = csvHint[..openParenthesis].TrimEnd();
+		string parentheticalText = csvHint[(openParenthesis + 1)..closeParenthesis];
+		return $"{ReverseString(beforeParentheses).Trim()} ({ReverseString(parentheticalText).Trim()})";
+	}
+
+	private static string ReverseString(string value) {
+		char[] chars = value.ToCharArray();
+		Array.Reverse(chars);
+		return new string(chars);
 	}
 
 	private static Dictionary<string, Dictionary<string, int[]>> ReadSetJson(string jsonPath) {
@@ -291,8 +391,15 @@ public class HuntingSetReferenceDataTests {
 		string CsvPath,
 		IReadOnlyDictionary<int, string> PieceToHint,
 		int ExpectedSetCount,
-		IReadOnlyDictionary<HintOverrideKey, int> HintOverrides
+		IReadOnlyDictionary<HintOverrideKey, int> HintOverrides,
+		HintTransform HintTransform = HintTransform.None,
+		StringComparison HintComparison = StringComparison.Ordinal
 	);
 
 	public sealed record HintOverrideKey(int ColumnIndex, string Hint);
+
+	public enum HintTransform {
+		None,
+		MadSpaceReverse
+	}
 }
