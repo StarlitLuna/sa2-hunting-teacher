@@ -17,7 +17,7 @@ public class HuntingSetReferenceDataTests {
 			yield return [
 				new ReferenceCase(
 					"Wild Canyon",
-					(int)LevelId.WildCanyon,
+					((int)LevelId.WildCanyon).ToString(CultureInfo.InvariantCulture),
 					Level.WildCanyon,
 					Path.Combine("SetData", "KnucklesSets.json"),
 					Path.Combine("TestData", "Knuckles", "WildCanyon.csv"),
@@ -30,20 +30,37 @@ public class HuntingSetReferenceDataTests {
 			yield return [
 				new ReferenceCase(
 					"Pumpkin Hill",
-					(int)LevelId.PumpkinHill,
+					((int)LevelId.PumpkinHill).ToString(CultureInfo.InvariantCulture),
 					Level.PumpkinHill,
 					Path.Combine("SetData", "KnucklesSets.json"),
 					Path.Combine("TestData", "Knuckles", "PumpkinHill.csv"),
 					PumpkinHill.PieceToHint,
 					1024,
-					new Dictionary<HintOverrideKey, int> {
-						{ new HintOverrideKey(0, "King of the hill."), 0x000A },
-						{ new HintOverrideKey(1, "King of the hill."), 0x000A },
-						{ new HintOverrideKey(2, "King of the hill."), 0x0004 }
-					}
+					PumpkinHillHintOverrides()
+				)
+			];
+
+			yield return [
+				new ReferenceCase(
+					"Pumpkin Hill Story",
+					((int)LevelId.PumpkinHill).ToString(CultureInfo.InvariantCulture) + "-story",
+					Level.PumpkinHill,
+					Path.Combine("SetData", "KnucklesSets.json"),
+					Path.Combine("TestData", "Knuckles", "PumpkinHillStory.csv"),
+					PumpkinHill.PieceToHint,
+					1024,
+					PumpkinHillHintOverrides()
 				)
 			];
 		}
+	}
+
+	private static Dictionary<HintOverrideKey, int> PumpkinHillHintOverrides() {
+		return new Dictionary<HintOverrideKey, int> {
+			{ new HintOverrideKey(0, "King of the hill."), 0x000A },
+			{ new HintOverrideKey(1, "King of the hill."), 0x000A },
+			{ new HintOverrideKey(2, "King of the hill."), 0x0004 }
+		};
 	}
 
 	[Theory]
@@ -170,7 +187,7 @@ public class HuntingSetReferenceDataTests {
 		Dictionary<string, int[]> expectedSets,
 		Dictionary<string, Dictionary<string, int[]>> actualSetsByLevel
 	) {
-		string levelKey = referenceCase.LevelId.ToString(CultureInfo.InvariantCulture);
+		string levelKey = referenceCase.LevelKey;
 		Assert.True(
 			actualSetsByLevel.TryGetValue(levelKey, out Dictionary<string, int[]>? actualSets),
 			$"{referenceCase.SetsJsonPath} does not contain level {levelKey} for {referenceCase.Name}."
@@ -229,7 +246,7 @@ public class HuntingSetReferenceDataTests {
 
 	public sealed record ReferenceCase(
 		string Name,
-		int LevelId,
+		string LevelKey,
 		Level Level,
 		string SetsJsonPath,
 		string CsvPath,
