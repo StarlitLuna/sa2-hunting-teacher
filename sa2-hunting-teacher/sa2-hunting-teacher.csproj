@@ -41,7 +41,17 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="Knuckles\KnucklesSets.json" />
+    <None Remove="Rouge\RougeSets.json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Include="icon.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Knuckles\KnucklesSets.json" />
+    <EmbeddedResource Include="Rouge\RougeSets.json" />
   </ItemGroup>
 
   <ItemGroup>

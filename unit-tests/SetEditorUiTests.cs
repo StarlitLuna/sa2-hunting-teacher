@@ -137,6 +137,68 @@ public class SetEditorUiTests : IDisposable {
 	}
 
 	[Fact]
+	public void ImportSetsButton_DisabledWhenNoSequenceSelected() {
+		StaHelper.RunSta(() => {
+			using SetEditor editor = BuildEditorWithOneValidSequence();
+			Button importSetsBtn = Reflect.GetField<Button>(editor, "importSetsBtn");
+
+			Assert.False(importSetsBtn.Enabled);
+		});
+	}
+
+	[Fact]
+	public void ImportSetsButton_EnabledWhenSequenceSelected() {
+		StaHelper.RunSta(() => {
+			using SetEditor editor = BuildEditorWithOneValidSequence();
+			Button importSetsBtn = Reflect.GetField<Button>(editor, "importSetsBtn");
+
+			SelectSequence(editor, 0);
+
+			Assert.True(importSetsBtn.Enabled);
+		});
+	}
+
+	[Fact]
+	public void ImportSetsButton_IsPlacedNextToSaveButton() {
+		StaHelper.RunSta(() => {
+			using SetEditor editor = BuildEditor(SettingsWithSequence());
+			Button importSetsBtn = Reflect.GetField<Button>(editor, "importSetsBtn");
+			Button setEditorSave = Reflect.GetField<Button>(editor, "setEditorSave");
+
+			Assert.Equal("Import Sets", importSetsBtn.Text);
+			Assert.True(importSetsBtn.Right <= setEditorSave.Left);
+			Assert.Equal(setEditorSave.Top, importSetsBtn.Top);
+		});
+	}
+
+	[Fact]
+	public void ImportSetsButton_ClickOpensSetImporterDialog() {
+		StaHelper.RunSta(() => {
+			using SetEditor editor = BuildEditor(SettingsWithSequence());
+			Button importSetsBtn = Reflect.GetField<Button>(editor, "importSetsBtn");
+			bool sawImporter = false;
+
+			using System.Windows.Forms.Timer closeTimer = new() {
+				Interval = 25
+			};
+			closeTimer.Tick += (_, _) => {
+				foreach (Form form in Application.OpenForms.Cast<Form>().ToArray()) {
+					if (form is SetImporter importer) {
+						sawImporter = true;
+						importer.Close();
+					}
+				}
+			};
+
+			closeTimer.Start();
+			Reflect.Invoke(editor, "importSetsBtn_Click", importSetsBtn, EventArgs.Empty);
+			closeTimer.Stop();
+
+			Assert.True(sawImporter);
+		});
+	}
+
+	[Fact]
 	public void InvalidSequence_DoesNotAutosaveOnClose() {
 		StaHelper.RunSta(() => {
 			Settings settings = SettingsWithSequence(
