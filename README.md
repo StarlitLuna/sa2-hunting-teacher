@@ -64,7 +64,7 @@ It's necessary to actually touch the third piece and trigger a win condition to 
 When you configure your repetitions the default behavior is that you will play through all sets once before you go back to the first set and then it repeats.
 The sequence completes when you repeat all sets the number of repetitions you configure. Additionally, there is a setting that changes the behavior of repetitions.
 When enabled, each set will repeat the number of repetitions you configure before you move on to the next set. The sequence completes when you see the last set and play it
-the number of repetitions you have configured. This option is to help re-enforce your learning in whichever way you feel would be more conducive towards memorizing the information.
+the number of repetitions you have configured. This option is to help reinforce your learning in whichever way you feel would be more conducive towards memorizing the information.
 
 e.g. with Repetitions in Place off and 3 repetitions: A -> B -> C -> A -> B -> C -> A -> B -> C -> End
 
@@ -80,14 +80,11 @@ harder than it really needs to be in a stage that already presents other gimmick
 a setting that allows you to correct the order of the letters in each first hint so that it is readable from left to right like normal.
 This feature is supported across all languages.
 
-When Mad Space is selected as the stage for learning in the level select drop down, a check box will appear asking if
-you want to allow reversed hints. Leaving this off as it is by default will fix the hint text to make it readable. Turning it on will leave the hints
-in their reversed ordering.
-
+This feature is controlled by the `MSp Hints` setting.
 The setting has 4 options available:
 
 - Fixed: Hints appear with words spelled correctly (readable from left to right)
-- Reversed: Hints appear with words reversed (what happens in a regular game play)
+- Reversed: Hints appear with words reversed (what happens in a regular gameplay)
 - Alternating: Hints will appear with words spelled correctly the first time, then reversed and alternate with each repetition
 - Alternating Reversed: The same as above but the first time the hints will appear reversed instead of fixed.
   - Note: When either alternating setting is selected, Repetitions in Place will be forced and a minimum of 2 repetitions will be required
