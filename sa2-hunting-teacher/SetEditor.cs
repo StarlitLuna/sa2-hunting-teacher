@@ -6,6 +6,11 @@ namespace sa2_hunting_teacher {
 			P3
 		}
 
+		private enum ComboOptionMode {
+			Collapsed,
+			Expanded
+		}
+
 		private sealed class CustomSequence {
 			public long Id;
 			public string Name = "";
@@ -21,31 +26,6 @@ namespace sa2_hunting_teacher {
 			public bool IsEmpty {
 				get {
 					return this.P1Id is null && this.P2Id is null && this.P3Id is null;
-				}
-			}
-
-			public int? GetSlot(Slot slot) {
-				return slot switch {
-					Slot.P1 => this.P1Id,
-					Slot.P2 => this.P2Id,
-					Slot.P3 => this.P3Id,
-					_ => throw new ArgumentOutOfRangeException(nameof(slot))
-				};
-			}
-
-			public void SetSlot(Slot slot, int? value) {
-				switch (slot) {
-					case Slot.P1:
-						this.P1Id = value;
-						break;
-					case Slot.P2:
-						this.P2Id = value;
-						break;
-					case Slot.P3:
-						this.P3Id = value;
-						break;
-					default:
-						throw new ArgumentOutOfRangeException(nameof(slot));
 				}
 			}
 		}
@@ -70,32 +50,71 @@ namespace sa2_hunting_teacher {
 			}
 		}
 
+		private sealed class SlotDefinition {
+			public required Slot Slot { get; init; }
+			public required string Label { get; init; }
+			public required Func<CustomSet, int?> GetValue { get; init; }
+			public required Action<CustomSet, int?> SetValue { get; init; }
+			public required Func<LevelCatalog, IReadOnlyList<int>> CatalogIds { get; init; }
+			public required Func<DataRowControls, ComboBox> Combo { get; init; }
+		}
+
 		private static readonly NoneOption None = new();
+		private static readonly SlotDefinition[] Slots = [
+			new() {
+				Slot = Slot.P1,
+				Label = "Piece 1",
+				GetValue = set => set.P1Id,
+				SetValue = (set, value) => set.P1Id = value,
+				CatalogIds = catalog => catalog.P1,
+				Combo = row => row.P1
+			},
+			new() {
+				Slot = Slot.P2,
+				Label = "Piece 2",
+				GetValue = set => set.P2Id,
+				SetValue = (set, value) => set.P2Id = value,
+				CatalogIds = catalog => catalog.P2,
+				Combo = row => row.P2
+			},
+			new() {
+				Slot = Slot.P3,
+				Label = "Piece 3",
+				GetValue = set => set.P3Id,
+				SetValue = (set, value) => set.P3Id = value,
+				CatalogIds = catalog => catalog.P3,
+				Combo = row => row.P3
+			}
+		];
+		private static readonly Lazy<Dictionary<(LevelCatalog Catalog, Slot Slot), PieceOption[]>> SortedOptionCache =
+			new(SetEditor.BuildSortedOptionCache);
+		private static readonly object[] NoneOnlyOptions = [SetEditor.None];
+		private const int AutoSaveDelayMs = 300;
 
 		private sealed class DataRowControls {
+			public required CustomSet Model { get; init; }
 			public required ComboBox P1 { get; init; }
 			public required ComboBox P2 { get; init; }
 			public required ComboBox P3 { get; init; }
 			public required Button Delete { get; init; }
-
-			public ComboBox GetCombo(Slot slot) {
-				return slot switch {
-					Slot.P1 => this.P1,
-					Slot.P2 => this.P2,
-					Slot.P3 => this.P3,
-					_ => throw new ArgumentOutOfRangeException(nameof(slot))
-				};
-			}
 		}
 
 		private readonly Settings settings;
 		private readonly List<CustomSequence> sequences = new();
 		private readonly List<DataRowControls> dataRows = new();
+		private readonly System.Windows.Forms.Timer autoSaveTimer;
+		private bool autoSavePending;
 		private bool suspendEvents;
+		private bool suspendSequenceSelection;
 
 		public SetEditor(Settings settings) {
 			InitializeComponent();
 			this.settings = settings;
+			this.components ??= new System.ComponentModel.Container();
+			this.autoSaveTimer = new System.Windows.Forms.Timer(this.components) {
+				Interval = SetEditor.AutoSaveDelayMs
+			};
+			this.autoSaveTimer.Tick += this.autoSaveTimer_Tick;
 			SupportedLevels.Configure(this.setEditorLevels);
 			this.setEditorLevels.SelectedIndex = -1;
 			this.LoadFromSettings();
@@ -103,10 +122,15 @@ namespace sa2_hunting_teacher {
 		}
 
 		private void LoadFromSettings() {
-			foreach (HuntingSequence sequence in this.settings.CustomSequences) {
-				CustomSequence seq = SetEditor.FromPersisted(sequence);
-				this.sequences.Add(seq);
-				this.customSequences.Items.Add(new ListViewItem(seq.Name));
+			this.customSequences.BeginUpdate();
+			try {
+				foreach (HuntingSequence sequence in this.settings.CustomSequences) {
+					CustomSequence seq = SetEditor.FromPersisted(sequence);
+					this.sequences.Add(seq);
+					this.customSequences.Items.Add(new ListViewItem(seq.Name));
+				}
+			} finally {
+				this.customSequences.EndUpdate();
 			}
 		}
 
@@ -150,12 +174,38 @@ namespace sa2_hunting_teacher {
 			return sequence;
 		}
 
-		private void TryAutoSave() {
-			if (this.ValidateSequences().Count > 0) {
+		private void ScheduleAutoSave() {
+			this.autoSavePending = true;
+			this.autoSaveTimer.Stop();
+			this.autoSaveTimer.Start();
+		}
+
+		private void autoSaveTimer_Tick(object? sender, EventArgs e) {
+			this.FlushAutoSave();
+		}
+
+		private void CancelPendingAutoSave() {
+			this.autoSaveTimer.Stop();
+			this.autoSavePending = false;
+		}
+
+		private void FlushAutoSave() {
+			if (!this.autoSavePending) {
 				return;
 			}
 
-			this.PersistSequences();
+			this.CancelPendingAutoSave();
+			this.PersistIfValid(showErrors: false);
+		}
+
+		protected override void OnFormClosing(FormClosingEventArgs e) {
+			this.FlushAutoSave();
+			base.OnFormClosing(e);
+		}
+
+		protected override void OnFormClosed(FormClosedEventArgs e) {
+			this.autoSaveTimer.Dispose();
+			base.OnFormClosed(e);
 		}
 
 		private void PersistSequences() {
@@ -168,21 +218,29 @@ namespace sa2_hunting_teacher {
 			this.settings.Save();
 		}
 
-		private void setEditorSave_Click(object sender, EventArgs e) {
+		private bool PersistIfValid(bool showErrors) {
 			IReadOnlyList<string> errors = this.ValidateSequences();
 			if (errors.Count > 0) {
-				MessageBox.Show(
-					this,
-					string.Join(Environment.NewLine, errors),
-					"Cannot Save",
-					MessageBoxButtons.OK,
-					MessageBoxIcon.Error
-				);
+				if (showErrors) {
+					MessageBox.Show(
+						this,
+						string.Join(Environment.NewLine, errors),
+						"Cannot Save",
+						MessageBoxButtons.OK,
+						MessageBoxIcon.Error
+					);
+				}
 
-				return;
+				return false;
 			}
 
 			this.PersistSequences();
+			return true;
+		}
+
+		private void setEditorSave_Click(object sender, EventArgs e) {
+			this.CancelPendingAutoSave();
+			this.PersistIfValid(showErrors: true);
 		}
 
 		private CustomSequence? Current() {
@@ -199,6 +257,26 @@ namespace sa2_hunting_teacher {
 			this.deleteSequence.Enabled = current != null;
 		}
 
+		private void SetSelectedSequence(int? index) {
+			this.suspendSequenceSelection = true;
+			this.customSequences.BeginUpdate();
+			try {
+				this.customSequences.SelectedIndices.Clear();
+				if (index.HasValue) {
+					ListViewItem item = this.customSequences.Items[index.Value];
+					item.Selected = true;
+					item.Focused = true;
+					item.EnsureVisible();
+				}
+			} finally {
+				this.customSequences.EndUpdate();
+				this.suspendSequenceSelection = false;
+			}
+
+			this.UpdateChromeForSelection();
+			this.LoadSequenceIntoUi(this.Current());
+		}
+
 		private void addSequence_Click(object sender, EventArgs e) {
 			CustomSequence seq = new() {
 				Id = this.settings.NextSequenceId++,
@@ -207,11 +285,16 @@ namespace sa2_hunting_teacher {
 
 			this.sequences.Add(seq);
 			ListViewItem item = new(seq.Name);
-			this.customSequences.Items.Add(item);
-			item.Selected = true;
+			this.customSequences.BeginUpdate();
+			try {
+				this.customSequences.Items.Add(item);
+			} finally {
+				this.customSequences.EndUpdate();
+			}
+			this.SetSelectedSequence(this.sequences.Count - 1);
 			this.customSequences.Focus();
 			item.BeginEdit();
-			this.TryAutoSave();
+			this.ScheduleAutoSave();
 		}
 
 		private void deleteSequence_Click(object sender, EventArgs e) {
@@ -244,16 +327,21 @@ namespace sa2_hunting_teacher {
 
 			int index = this.customSequences.SelectedIndices[0];
 			this.sequences.RemoveAt(index);
-			this.customSequences.Items.RemoveAt(index);
-
-			if (this.sequences.Count > 0) {
-				int next = Math.Min(index, this.sequences.Count - 1);
-				this.customSequences.Items[next].Selected = true;
-			} else {
-				this.LoadSequenceIntoUi(null);
+			this.suspendSequenceSelection = true;
+			this.customSequences.BeginUpdate();
+			try {
+				this.customSequences.Items.RemoveAt(index);
+			} finally {
+				this.customSequences.EndUpdate();
+				this.suspendSequenceSelection = false;
 			}
 
-			this.TryAutoSave();
+			int? next = this.sequences.Count > 0
+				? Math.Min(index, this.sequences.Count - 1)
+				: null;
+			this.SetSelectedSequence(next);
+			this.CancelPendingAutoSave();
+			this.PersistIfValid(showErrors: false);
 		}
 
 		private void customSequences_AfterLabelEdit(object sender, LabelEditEventArgs e) {
@@ -269,10 +357,14 @@ namespace sa2_hunting_teacher {
 				this.customSequences.Items[e.Item].Text = trimmed;
 			}
 
-			this.TryAutoSave();
+			this.ScheduleAutoSave();
 		}
 
 		private void customSequences_SelectedIndexChanged(object sender, EventArgs e) {
+			if (this.suspendSequenceSelection) {
+				return;
+			}
+
 			this.UpdateChromeForSelection();
 			this.LoadSequenceIntoUi(this.Current());
 		}
@@ -304,13 +396,15 @@ namespace sa2_hunting_teacher {
 
 				if (choice != DialogResult.Yes) {
 					this.suspendEvents = true;
-					if (current.Level.HasValue) {
-						this.setEditorLevels.SelectedValue = current.Level.Value;
-					} else {
-						this.setEditorLevels.SelectedIndex = -1;
+					try {
+						if (current.Level.HasValue) {
+							this.setEditorLevels.SelectedValue = current.Level.Value;
+						} else {
+							this.setEditorLevels.SelectedIndex = -1;
+						}
+					} finally {
+						this.suspendEvents = false;
 					}
-
-					this.suspendEvents = false;
 					return;
 				}
 			}
@@ -318,40 +412,57 @@ namespace sa2_hunting_teacher {
 			current.Level = newLevel;
 			current.Sets.Clear();
 			this.LoadSequenceIntoUi(current);
-			this.TryAutoSave();
+			this.ScheduleAutoSave();
+			if (hasContent) {
+				this.CancelPendingAutoSave();
+				this.PersistIfValid(showErrors: false);
+			}
 		}
 
 		private void LoadSequenceIntoUi(CustomSequence? current) {
 			this.suspendEvents = true;
 			try {
-				this.ClearDataRows();
+				this.WithSuspendedRowLayout(() => {
+					this.ClearDataRows();
 
-				if (current == null) {
-					this.setEditorLevels.SelectedIndex = -1;
-					return;
-				}
+					if (current == null) {
+						this.setEditorLevels.SelectedIndex = -1;
+						return;
+					}
 
-				if (current.Level.HasValue) {
-					this.setEditorLevels.SelectedValue = current.Level.Value;
-				} else {
-					this.setEditorLevels.SelectedIndex = -1;
-				}
+					if (current.Level.HasValue) {
+						this.setEditorLevels.SelectedValue = current.Level.Value;
+					} else {
+						this.setEditorLevels.SelectedIndex = -1;
+					}
 
-				if (!current.Level.HasValue) {
-					return;
-				}
+					if (!current.Level.HasValue) {
+						return;
+					}
 
-				foreach (CustomSet set in current.Sets) {
-					this.AddDataRow(set);
-				}
+					LevelCatalog catalog = LevelCatalog.Get(current.Level.Value);
+					foreach (CustomSet set in current.Sets) {
+						this.AddDataRow(set, catalog);
+					}
 
-				if (current.Sets.Count == 0 || !current.Sets[^1].IsEmpty) {
-					CustomSet trailing = new();
-					current.Sets.Add(trailing);
-					this.AddDataRow(trailing);
-				}
+					this.EnsureTrailingEmptyRow(current, catalog);
+				});
 			} finally {
 				this.suspendEvents = false;
+			}
+		}
+
+		private void WithSuspendedRowLayout(Action action) {
+			this.SuspendLayout();
+			this.splitContainer2.Panel2.SuspendLayout();
+			this.tableLayoutPanel1.SuspendLayout();
+			try {
+				action();
+			} finally {
+				this.tableLayoutPanel1.ResumeLayout(false);
+				this.splitContainer2.Panel2.ResumeLayout(false);
+				this.splitContainer2.Panel2.PerformLayout();
+				this.ResumeLayout(false);
 			}
 		}
 
@@ -364,14 +475,12 @@ namespace sa2_hunting_teacher {
 			}
 
 			this.dataRows.Clear();
-			while (this.tableLayoutPanel1.RowStyles.Count > 1) {
-				this.tableLayoutPanel1.RowStyles.RemoveAt(this.tableLayoutPanel1.RowStyles.Count - 1);
-			}
-
+			this.tableLayoutPanel1.RowStyles.Clear();
+			this.tableLayoutPanel1.RowStyles.Add(new RowStyle());
 			this.tableLayoutPanel1.RowCount = 1;
 		}
 
-		private void AddDataRow(CustomSet model) {
+		private void AddDataRow(CustomSet model, LevelCatalog catalog) {
 			int rowIndex = this.tableLayoutPanel1.RowCount;
 			this.tableLayoutPanel1.RowCount = rowIndex + 1;
 			this.tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.AutoSize));
@@ -389,6 +498,7 @@ namespace sa2_hunting_teacher {
 			};
 
 			DataRowControls row = new() {
+				Model = model,
 				P1 = p1,
 				P2 = p2,
 				P3 = p3,
@@ -396,13 +506,12 @@ namespace sa2_hunting_teacher {
 			};
 			this.dataRows.Add(row);
 
-			this.PopulateRowCombo(row, Slot.P1, model);
-			this.PopulateRowCombo(row, Slot.P2, model);
-			this.PopulateRowCombo(row, Slot.P3, model);
-
-			p1.SelectedIndexChanged += (s, e) => this.OnRowComboChanged(row, Slot.P1);
-			p2.SelectedIndexChanged += (s, e) => this.OnRowComboChanged(row, Slot.P2);
-			p3.SelectedIndexChanged += (s, e) => this.OnRowComboChanged(row, Slot.P3);
+			foreach (SlotDefinition slot in SetEditor.Slots) {
+				ComboBox combo = slot.Combo(row);
+				this.PopulateRowCombo(row, slot, model, catalog, ComboOptionMode.Collapsed);
+				combo.DropDown += (s, e) => this.OnRowComboDropDown(row, slot.Slot);
+				combo.SelectedIndexChanged += (s, e) => this.OnRowComboChanged(row, slot.Slot);
+			}
 			delete.Click += (s, e) => this.OnRowDeleteClicked(row);
 
 			this.tableLayoutPanel1.Controls.Add(p1, 0, rowIndex);
@@ -411,87 +520,243 @@ namespace sa2_hunting_teacher {
 			this.tableLayoutPanel1.Controls.Add(delete, 3, rowIndex);
 		}
 
+		private void EnsureTrailingEmptyRow(CustomSequence current) {
+			if (!current.Level.HasValue) {
+				return;
+			}
+
+			this.EnsureTrailingEmptyRow(current, LevelCatalog.Get(current.Level.Value));
+		}
+
+		private void EnsureTrailingEmptyRow(CustomSequence current, LevelCatalog catalog) {
+			if (current.Sets.Count > 0 && current.Sets[^1].IsEmpty) {
+				return;
+			}
+
+			CustomSet trailing = new();
+			current.Sets.Add(trailing);
+			this.AddDataRow(trailing, catalog);
+		}
+
+		private void RemoveDataRowAt(int rowIndex) {
+			DataRowControls row = this.dataRows[rowIndex];
+			this.tableLayoutPanel1.Controls.Remove(row.P1);
+			this.tableLayoutPanel1.Controls.Remove(row.P2);
+			this.tableLayoutPanel1.Controls.Remove(row.P3);
+			this.tableLayoutPanel1.Controls.Remove(row.Delete);
+			row.P1.Dispose();
+			row.P2.Dispose();
+			row.P3.Dispose();
+			row.Delete.Dispose();
+
+			this.dataRows.RemoveAt(rowIndex);
+			int tableRow = rowIndex + 1;
+			if (this.tableLayoutPanel1.RowStyles.Count > tableRow) {
+				this.tableLayoutPanel1.RowStyles.RemoveAt(tableRow);
+			}
+
+			for (int i = rowIndex; i < this.dataRows.Count; i++) {
+				DataRowControls shifted = this.dataRows[i];
+				int shiftedTableRow = i + 1;
+				this.tableLayoutPanel1.SetRow(shifted.P1, shiftedTableRow);
+				this.tableLayoutPanel1.SetRow(shifted.P2, shiftedTableRow);
+				this.tableLayoutPanel1.SetRow(shifted.P3, shiftedTableRow);
+				this.tableLayoutPanel1.SetRow(shifted.Delete, shiftedTableRow);
+			}
+
+			this.tableLayoutPanel1.RowCount = this.dataRows.Count + 1;
+		}
+
 		private ComboBox MakeSlotCombo() {
 			return new ComboBox {
 				DropDownStyle = ComboBoxStyle.DropDownList,
 				Dock = DockStyle.Fill,
 				Margin = new Padding(2),
-				DropDownWidth = 400
+				DropDownWidth = 400,
+				Tag = ComboOptionMode.Collapsed
 			};
 		}
 
-		private void PopulateRowCombo(DataRowControls row, Slot slot, CustomSet model) {
+		private void OnRowComboDropDown(DataRowControls row, Slot slot) {
 			CustomSequence? current = this.Current();
 			if (current == null || !current.Level.HasValue) {
 				return;
 			}
 
 			LevelCatalog catalog = LevelCatalog.Get(current.Level.Value);
-			List<object> items = SetEditor.BuildOptions(catalog, slot, model);
-
-			ComboBox combo = row.GetCombo(slot);
-			combo.BeginUpdate();
-			combo.Items.Clear();
-			foreach (object item in items) {
-				combo.Items.Add(item);
+			this.suspendEvents = true;
+			try {
+				this.PopulateRowCombo(row, SetEditor.DefinitionFor(slot), row.Model, catalog, ComboOptionMode.Expanded);
+			} finally {
+				this.suspendEvents = false;
 			}
-
-			int? selected = model.GetSlot(slot);
-			combo.SelectedIndex = 0;
-			if (selected.HasValue) {
-				for (int i = 0; i < combo.Items.Count; i++) {
-					if (combo.Items[i] is PieceOption opt && opt.Id == selected.Value) {
-						combo.SelectedIndex = i;
-						break;
-					}
-				}
-			}
-
-			combo.EndUpdate();
 		}
 
-		private static List<object> BuildOptions(LevelCatalog catalog, Slot slot, CustomSet model) {
+		private void PopulateRowCombo(
+			DataRowControls row,
+			SlotDefinition slot,
+			CustomSet model,
+			LevelCatalog catalog,
+			ComboOptionMode mode
+		) {
+			object[] items = mode == ComboOptionMode.Expanded
+				? SetEditor.BuildExpandedOptions(catalog, slot, model)
+				: SetEditor.BuildCollapsedOptionsForSlot(catalog, slot, model);
+
+			ComboBox combo = slot.Combo(row);
+			combo.BeginUpdate();
+			try {
+				combo.Tag = mode;
+				combo.Items.Clear();
+				combo.Items.AddRange(items);
+
+				int? selected = slot.GetValue(model);
+				combo.SelectedIndex = 0;
+				if (selected.HasValue) {
+					for (int i = 0; i < combo.Items.Count; i++) {
+						if (combo.Items[i] is PieceOption opt && opt.Id == selected.Value) {
+							combo.SelectedIndex = i;
+							break;
+						}
+					}
+				}
+			} finally {
+				combo.EndUpdate();
+			}
+		}
+
+		private static object[] BuildCollapsedOptionsForSlot(LevelCatalog catalog, SlotDefinition slot, CustomSet model) {
+			int? selected = slot.GetValue(model);
+			if (!selected.HasValue || SetEditor.EnemyUsedInOtherSlot(catalog, slot, model, selected.Value)) {
+				return SetEditor.NoneOnlyOptions;
+			}
+
+			PieceOption? option = SetEditor.OptionFor(catalog, slot, selected.Value);
+			if (option == null) {
+				return SetEditor.NoneOnlyOptions;
+			}
+
+			return [SetEditor.None, option];
+		}
+
+		private static object[] BuildOptions(LevelCatalog catalog, Slot slot, CustomSet model) {
+			return SetEditor.BuildExpandedOptions(catalog, SetEditor.DefinitionFor(slot), model);
+		}
+
+		private static object[] BuildExpandedOptions(LevelCatalog catalog, SlotDefinition slot, CustomSet model) {
 			HashSet<int> usedEnemiesElsewhere = new();
-			foreach (Slot other in new[] { Slot.P1, Slot.P2, Slot.P3 }) {
+			foreach (SlotDefinition other in SetEditor.Slots) {
 				if (other == slot) {
 					continue;
 				}
 
-				int? id = model.GetSlot(other);
-				if (id.HasValue && catalog.Enemies.Contains(id.Value)) {
+				int? id = other.GetValue(model);
+				if (id.HasValue && SetEditor.IsEnemy(catalog, id.Value)) {
 					usedEnemiesElsewhere.Add(id.Value);
 				}
 			}
 
-			IReadOnlyList<int> ownIds = slot switch {
-				Slot.P1 => catalog.P1,
-				Slot.P2 => catalog.P2,
-				Slot.P3 => catalog.P3,
-				_ => Array.Empty<int>()
-			};
-
-			List<PieceOption> pieces = new();
-			foreach (int id in ownIds) {
-				pieces.Add(new PieceOption(id, catalog.HintFor(id)));
-			}
-
-			foreach (int id in catalog.Enemies) {
-				if (usedEnemiesElsewhere.Contains(id)) {
+			List<object> items = new();
+			items.Add(SetEditor.None);
+			foreach (PieceOption piece in SetEditor.SortedOptionsFor(catalog, slot)) {
+				if (usedEnemiesElsewhere.Contains(piece.Id) && catalog.Enemies.Contains(piece.Id)) {
 					continue;
 				}
 
-				pieces.Add(new PieceOption(id, catalog.HintFor(id)));
-			}
-
-			pieces.Sort((a, b) => string.Compare(a.Hint, b.Hint, StringComparison.InvariantCultureIgnoreCase));
-
-			List<object> items = new();
-			items.Add(SetEditor.None);
-			foreach (PieceOption piece in pieces) {
 				items.Add(piece);
 			}
 
-			return items;
+			return items.ToArray();
+		}
+
+		private static bool EnemyUsedInOtherSlot(LevelCatalog catalog, Slot slot, CustomSet model, int id) {
+			return SetEditor.EnemyUsedInOtherSlot(catalog, SetEditor.DefinitionFor(slot), model, id);
+		}
+
+		private static bool EnemyUsedInOtherSlot(LevelCatalog catalog, SlotDefinition slot, CustomSet model, int id) {
+			if (!SetEditor.IsEnemy(catalog, id)) {
+				return false;
+			}
+
+			foreach (SlotDefinition other in SetEditor.Slots) {
+				if (other == slot) {
+					continue;
+				}
+
+				if (other.GetValue(model) == id) {
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		private static PieceOption? OptionFor(LevelCatalog catalog, Slot slot, int id) {
+			return SetEditor.OptionFor(catalog, SetEditor.DefinitionFor(slot), id);
+		}
+
+		private static PieceOption? OptionFor(LevelCatalog catalog, SlotDefinition slot, int id) {
+			foreach (PieceOption option in SetEditor.SortedOptionsFor(catalog, slot)) {
+				if (option.Id == id) {
+					return option;
+				}
+			}
+
+			return null;
+		}
+
+		private static PieceOption[] SortedOptionsFor(LevelCatalog catalog, SlotDefinition slot) {
+			return SetEditor.SortedOptionCache.Value[(catalog, slot.Slot)];
+		}
+
+		private static Dictionary<(LevelCatalog Catalog, Slot Slot), PieceOption[]> BuildSortedOptionCache() {
+			Dictionary<(LevelCatalog Catalog, Slot Slot), PieceOption[]> cache = new();
+			foreach (Level level in Enum.GetValues<Level>()) {
+				LevelCatalog catalog = LevelCatalog.Get(level);
+				foreach (SlotDefinition slot in SetEditor.Slots) {
+					List<PieceOption> pieces = new();
+					foreach (int id in slot.CatalogIds(catalog)) {
+						pieces.Add(new PieceOption(id, catalog.HintFor(id)));
+					}
+
+					foreach (int id in catalog.Enemies) {
+						pieces.Add(new PieceOption(id, catalog.HintFor(id)));
+					}
+
+					pieces.Sort((a, b) => string.Compare(a.Hint, b.Hint, StringComparison.InvariantCultureIgnoreCase));
+					cache[(catalog, slot.Slot)] = pieces.ToArray();
+				}
+			}
+
+			return cache;
+		}
+
+		private static bool ShouldRefreshSiblingOptions(LevelCatalog catalog, int? oldId, int? newId) {
+			if (oldId == newId) {
+				return false;
+			}
+
+			bool oldWasEnemy = oldId.HasValue && SetEditor.IsEnemy(catalog, oldId.Value);
+			bool newIsEnemy = newId.HasValue && SetEditor.IsEnemy(catalog, newId.Value);
+			return oldWasEnemy || newIsEnemy;
+		}
+
+		private static bool IsEnemy(LevelCatalog catalog, int id) {
+			return catalog.Enemies.Contains(id);
+		}
+
+		private static SlotDefinition DefinitionFor(Slot slot) {
+			foreach (SlotDefinition definition in SetEditor.Slots) {
+				if (definition.Slot == slot) {
+					return definition;
+				}
+			}
+
+			throw new ArgumentOutOfRangeException(nameof(slot));
+		}
+
+		private static ComboOptionMode ComboMode(ComboBox combo) {
+			return combo.Tag is ComboOptionMode mode ? mode : ComboOptionMode.Collapsed;
 		}
 
 		private void OnRowComboChanged(DataRowControls row, Slot slot) {
@@ -504,36 +769,44 @@ namespace sa2_hunting_teacher {
 				return;
 			}
 
-			int rowIndex = this.dataRows.IndexOf(row);
+			int rowIndex = current.Sets.IndexOf(row.Model);
 			if (rowIndex < 0 || rowIndex >= current.Sets.Count) {
 				return;
 			}
 
-			CustomSet model = current.Sets[rowIndex];
-			ComboBox combo = row.GetCombo(slot);
+			CustomSet model = row.Model;
+			SlotDefinition definition = SetEditor.DefinitionFor(slot);
+			int? oldId = definition.GetValue(model);
+			ComboBox combo = definition.Combo(row);
 			int? newId = combo.SelectedItem is PieceOption opt ? opt.Id : (int?)null;
-			model.SetSlot(slot, newId);
+			definition.SetValue(model, newId);
 
-			this.suspendEvents = true;
-			try {
-				foreach (Slot other in new[] { Slot.P1, Slot.P2, Slot.P3 }) {
-					if (other == slot) {
-						continue;
+			if (!current.Level.HasValue) {
+				return;
+			}
+
+			LevelCatalog catalog = LevelCatalog.Get(current.Level.Value);
+			if (SetEditor.ShouldRefreshSiblingOptions(catalog, oldId, newId)) {
+				this.suspendEvents = true;
+				try {
+					foreach (SlotDefinition other in SetEditor.Slots) {
+						if (other == definition) {
+							continue;
+						}
+
+						ComboBox otherCombo = other.Combo(row);
+						this.PopulateRowCombo(row, other, model, catalog, SetEditor.ComboMode(otherCombo));
 					}
-
-					this.PopulateRowCombo(row, other, model);
+				} finally {
+					this.suspendEvents = false;
 				}
-			} finally {
-				this.suspendEvents = false;
 			}
 
 			if (rowIndex == current.Sets.Count - 1 && !model.IsEmpty) {
-				CustomSet trailing = new();
-				current.Sets.Add(trailing);
-				this.AddDataRow(trailing);
+				this.WithSuspendedRowLayout(() => this.EnsureTrailingEmptyRow(current, catalog));
 			}
 
-			this.TryAutoSave();
+			this.ScheduleAutoSave();
 		}
 
 		public IReadOnlyList<string> ValidateSequences() {
@@ -560,23 +833,22 @@ namespace sa2_hunting_teacher {
 		}
 
 		private void ValidateRow(LevelCatalog catalog, CustomSet set, string seqLabel, int rowNum, List<string> errors) {
-			foreach (Slot slot in new[] { Slot.P1, Slot.P2, Slot.P3 }) {
-				int? id = set.GetSlot(slot);
-				string slotLabel = SetEditor.SlotLabel(slot);
+			foreach (SlotDefinition slot in SetEditor.Slots) {
+				int? id = slot.GetValue(set);
 				if (!id.HasValue) {
-					errors.Add($"{seqLabel} row {rowNum}: {slotLabel} is not set.");
+					errors.Add($"{seqLabel} row {rowNum}: {slot.Label} is not set.");
 					continue;
 				}
 
 				if (!SetEditor.IsValidForSlot(catalog, slot, id.Value)) {
-					errors.Add($"{seqLabel} row {rowNum}: {slotLabel} has id 0x{id.Value:X4} which is not a valid {slotLabel} or Enemy id.");
+					errors.Add($"{seqLabel} row {rowNum}: {slot.Label} has id 0x{id.Value:X4} which is not a valid {slot.Label} or Enemy id.");
 				}
 			}
 
 			HashSet<int> seen = new();
 			HashSet<int> reported = new();
-			foreach (Slot slot in new[] { Slot.P1, Slot.P2, Slot.P3 }) {
-				int? id = set.GetSlot(slot);
+			foreach (SlotDefinition slot in SetEditor.Slots) {
+				int? id = slot.GetValue(set);
 				if (!id.HasValue) {
 					continue;
 				}
@@ -587,24 +859,8 @@ namespace sa2_hunting_teacher {
 			}
 		}
 
-		private static string SlotLabel(Slot slot) {
-			return slot switch {
-				Slot.P1 => "Piece 1",
-				Slot.P2 => "Piece 2",
-				Slot.P3 => "Piece 3",
-				_ => slot.ToString()
-			};
-		}
-
-		private static bool IsValidForSlot(LevelCatalog catalog, Slot slot, int id) {
-			IReadOnlyList<int> ownIds = slot switch {
-				Slot.P1 => catalog.P1,
-				Slot.P2 => catalog.P2,
-				Slot.P3 => catalog.P3,
-				_ => Array.Empty<int>()
-			};
-
-			return ownIds.Contains(id) || catalog.Enemies.Contains(id);
+		private static bool IsValidForSlot(LevelCatalog catalog, SlotDefinition slot, int id) {
+			return slot.CatalogIds(catalog).Contains(id) || SetEditor.IsEnemy(catalog, id);
 		}
 
 		private void OnRowDeleteClicked(DataRowControls row) {
@@ -613,12 +869,12 @@ namespace sa2_hunting_teacher {
 				return;
 			}
 
-			int rowIndex = this.dataRows.IndexOf(row);
+			int rowIndex = current.Sets.IndexOf(row.Model);
 			if (rowIndex < 0 || rowIndex >= current.Sets.Count) {
 				return;
 			}
 
-			CustomSet model = current.Sets[rowIndex];
+			CustomSet model = row.Model;
 			if (!model.IsEmpty) {
 				DialogResult choice = MessageBox.Show(
 					this,
@@ -633,9 +889,13 @@ namespace sa2_hunting_teacher {
 				}
 			}
 
-			current.Sets.RemoveAt(rowIndex);
-			this.LoadSequenceIntoUi(current);
-			this.TryAutoSave();
+			this.WithSuspendedRowLayout(() => {
+				current.Sets.RemoveAt(rowIndex);
+				this.RemoveDataRowAt(rowIndex);
+				this.EnsureTrailingEmptyRow(current);
+			});
+			this.CancelPendingAutoSave();
+			this.PersistIfValid(showErrors: false);
 		}
 	}
 }

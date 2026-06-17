@@ -1,4 +1,6 @@
-﻿namespace sa2_hunting_teacher.Updates {
+﻿using MarkdownToRtf;
+
+namespace sa2_hunting_teacher.Updates {
 	public partial class UpdateForm : Form {
 		private UpdateManager updateManager;
 		private Release release;
@@ -8,9 +10,11 @@
 
 			this.updateManager = updateManager;
 			this.release = release;
+			this.Text += " - " + release.TagName;
 			this.infoLabel1.Text += release.TagName;
 			this.infoLabel1.Location = new Point(18 + this.infoLabel1.Location.X + SystemIcons.Information.Width, this.infoLabel1.Location.Y);
 			this.infoLabel2.Location = new Point(18 + this.infoLabel2.Location.X + SystemIcons.Information.Width, this.infoLabel2.Location.Y);
+			this.changeLog.Rtf = MarkdownToRtfConverter.Convert(release.Body ?? "");
 		}
 
 		private void SplitContainer1_Panel1_Paint(object sender, PaintEventArgs e) {
