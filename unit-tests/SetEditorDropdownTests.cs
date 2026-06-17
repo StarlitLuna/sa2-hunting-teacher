@@ -92,6 +92,25 @@ public class SetEditorDropdownTests {
 		}
 	}
 
+	[Fact]
+	public void Dropdown_SiblingRefreshIsOnlyNeededWhenEnemyMembershipChanges() {
+		MethodInfo? method = SetEditorType.GetMethod(
+			"ShouldRefreshSiblingOptions",
+			BindingFlags.NonPublic | BindingFlags.Static
+		);
+		Assert.NotNull(method);
+
+		LevelCatalog catalog = LevelCatalog.Get(Level.AquaticMine);
+		int normalPiece = catalog.P1.First();
+		int enemy = catalog.Enemies.First();
+
+		Assert.False(InvokeShouldRefreshSiblingOptions(method, catalog, null, normalPiece));
+		Assert.False(InvokeShouldRefreshSiblingOptions(method, catalog, normalPiece, catalog.P1.Skip(1).First()));
+		Assert.True(InvokeShouldRefreshSiblingOptions(method, catalog, null, enemy));
+		Assert.True(InvokeShouldRefreshSiblingOptions(method, catalog, enemy, null));
+		Assert.True(InvokeShouldRefreshSiblingOptions(method, catalog, enemy, normalPiece));
+	}
+
 	private static IReadOnlyList<int> OwnIdsForSlot(LevelCatalog catalog, object slot) {
 		string name = slot.ToString()!;
 		return name switch {
@@ -105,6 +124,10 @@ public class SetEditorDropdownTests {
 	private static IList InvokeBuildOptions(LevelCatalog catalog, object slot, object model) {
 		object result = BuildOptionsMethod.Invoke(null, new[] { catalog, slot, model })!;
 		return (IList)result;
+	}
+
+	private static bool InvokeShouldRefreshSiblingOptions(MethodInfo method, LevelCatalog catalog, int? oldId, int? newId) {
+		return (bool)method.Invoke(null, new object?[] { catalog, oldId, newId })!;
 	}
 
 	private static object NewEmptySet() {
