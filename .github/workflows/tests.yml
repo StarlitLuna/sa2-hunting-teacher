@@ -3,6 +3,11 @@ name: Tests
 on:
   pull_request:
   workflow_call:
+    inputs:
+      release_run:
+        required: false
+        type: boolean
+        default: false
 
 concurrency:
   group: tests-${{ github.workflow }}-${{ github.ref }}
@@ -33,5 +38,6 @@ jobs:
           dotnet test unit-tests/unit-tests.csproj -c Release /p:Platform=x86 --no-restore --no-build
 
       - name: Publish (verifies full release pipeline)
+        if: ${{ !inputs.release_run }}
         shell: pwsh
         run: msbuild sa2-hunting-teacher/sa2-hunting-teacher.csproj /t:Publish /p:Configuration=Release /p:Platform=x86 /p:PublishProfile=FolderProfile "/p:SolutionDir=$env:GITHUB_WORKSPACE\"

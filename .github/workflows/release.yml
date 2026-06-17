@@ -40,13 +40,15 @@ jobs:
     needs: check
     if: needs.check.outputs.should_release == 'true'
     uses: ./.github/workflows/tests.yml
+    with:
+      release_run: true
 
-  release:
-    needs: [check, test]
+  build_release:
+    needs: check
     if: needs.check.outputs.should_release == 'true'
     runs-on: windows-latest
     permissions:
-      contents: write
+      contents: read
       id-token: write
       attestations: write
     steps:
@@ -89,6 +91,28 @@ jobs:
         uses: actions/attest@v4
         with:
           subject-path: sa2-hunting-teacher.7z
+
+      - name: Upload release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-package
+          path: |
+            sa2-hunting-teacher.7z
+            release-attestation.md
+          if-no-files-found: error
+
+  create_release:
+    needs: [check, test, build_release]
+    if: needs.check.outputs.should_release == 'true'
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download release artifact
+        uses: actions/download-artifact@v5
+        with:
+          name: release-package
+          path: .
 
       - name: Create release
         uses: softprops/action-gh-release@v2
