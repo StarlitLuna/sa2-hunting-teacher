@@ -246,6 +246,78 @@ public class SetEditorUiTests : IDisposable {
 	}
 
 	[Fact]
+	public void ChangingLevelTwice_LeavesOneEmptyRowWithDropdowns() {
+		StaHelper.RunSta(() => {
+			using SetEditor editor = BuildEditor(SettingsWithSequence());
+			editor.Show();
+			Application.DoEvents();
+
+			Reflect.Invoke(
+				editor,
+				"addSequence_Click",
+				Reflect.GetField<Button>(editor, "addSequence"),
+				EventArgs.Empty
+			);
+			Application.DoEvents();
+			ComboBox levelSelector = Reflect.GetField<ComboBox>(editor, "setEditorLevels");
+
+			SelectLevelByIndex(levelSelector, Level.AquaticMine);
+			SelectLevelByIndex(levelSelector, Level.WildCanyon);
+			Application.DoEvents();
+
+			AssertSingleVisibleEmptyRow(editor);
+		});
+	}
+
+	[Fact]
+	public void ChangingPopulatedSequenceLevelThenChangingAgain_LeavesOneEmptyRowWithDropdowns() {
+		StaHelper.RunSta(() => {
+			using SetEditor editor = BuildEditorWithOneValidSequence();
+			editor.Show();
+			Application.DoEvents();
+			SelectSequence(editor, 0);
+			Application.DoEvents();
+			ComboBox levelSelector = Reflect.GetField<ComboBox>(editor, "setEditorLevels");
+
+			using System.Windows.Forms.Timer confirm = ConfirmNextDialogWithEnter();
+			SelectLevelByIndex(levelSelector, Level.WildCanyon);
+			confirm.Stop();
+			SelectLevelByIndex(levelSelector, Level.PumpkinHill);
+			Application.DoEvents();
+
+			AssertSingleVisibleEmptyRow(editor);
+		});
+	}
+
+	[Fact]
+	public void ChangingLevel_PerformsTableLayoutAfterRebuildingRows() {
+		StaHelper.RunSta(() => {
+			using SetEditor editor = BuildEditor(SettingsWithSequence());
+			editor.Show();
+			Application.DoEvents();
+
+			Reflect.Invoke(
+				editor,
+				"addSequence_Click",
+				Reflect.GetField<Button>(editor, "addSequence"),
+				EventArgs.Empty
+			);
+			Application.DoEvents();
+			ComboBox levelSelector = Reflect.GetField<ComboBox>(editor, "setEditorLevels");
+			SelectLevelByIndex(levelSelector, Level.AquaticMine);
+			Application.DoEvents();
+
+			TableLayoutPanel table = Reflect.GetField<TableLayoutPanel>(editor, "tableLayoutPanel1");
+			int layouts = 0;
+			table.Layout += (_, _) => layouts++;
+
+			SelectLevelByIndex(levelSelector, Level.WildCanyon);
+
+			Assert.True(layouts > 0, "Changing the level must relayout the rebuilt row table immediately.");
+		});
+	}
+
+	[Fact]
 	public void SequenceSelection_LoadsRowsWithCollapsedComboOptions() {
 		StaHelper.RunSta(() => {
 			using SetEditor editor = BuildEditorWithOneValidSequence();
@@ -392,5 +464,43 @@ public class SetEditorUiTests : IDisposable {
 		}
 
 		throw new ArgumentException($"Piece id 0x{id.Value:X4} is not present in the combo.");
+	}
+
+	private static void AssertSingleVisibleEmptyRow(SetEditor editor) {
+		IList rows = DataRows(editor);
+		Assert.Single(rows);
+		Assert.True(RowModel(rows[0]!).GetType().GetProperty("IsEmpty")!.GetValue(RowModel(rows[0]!)) is true);
+		Assert.Single(RowCombo(rows[0]!, "P1").Items);
+		Assert.Single(RowCombo(rows[0]!, "P2").Items);
+		Assert.Single(RowCombo(rows[0]!, "P3").Items);
+
+		TableLayoutPanel table = Reflect.GetField<TableLayoutPanel>(editor, "tableLayoutPanel1");
+		Assert.Equal(7, table.Controls.Count);
+		foreach (string slot in new[] { "P1", "P2", "P3" }) {
+			ComboBox combo = RowCombo(rows[0]!, slot);
+			Assert.Same(table, combo.Parent);
+			Assert.True(combo.Bounds.Height > 0, $"{slot} dropdown was not laid out.");
+			Assert.True(table.Height >= combo.Bottom, $"{slot} dropdown is clipped by the table.");
+		}
+	}
+
+	private static void SelectLevelByIndex(ComboBox combo, Level level) {
+		for (int i = 0; i < combo.Items.Count; i++) {
+			if (combo.Items[i] is LevelRow row && row.Level == level) {
+				combo.SelectedIndex = i;
+				return;
+			}
+		}
+
+		throw new ArgumentException($"{level} is not present in the level selector.");
+	}
+
+	private static System.Windows.Forms.Timer ConfirmNextDialogWithEnter() {
+		System.Windows.Forms.Timer timer = new() {
+			Interval = 25
+		};
+		timer.Tick += (_, _) => SendKeys.SendWait("{ENTER}");
+		timer.Start();
+		return timer;
 	}
 }

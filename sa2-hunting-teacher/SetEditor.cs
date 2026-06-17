@@ -486,7 +486,7 @@ namespace sa2_hunting_teacher {
 			try {
 				action();
 			} finally {
-				this.tableLayoutPanel1.ResumeLayout(false);
+				this.tableLayoutPanel1.ResumeLayout(true);
 				this.splitContainer2.Panel2.ResumeLayout(false);
 				this.splitContainer2.Panel2.PerformLayout();
 				this.ResumeLayout(false);
