@@ -1,4 +1,6 @@
 using sa2_hunting_teacher.Updates;
+using System.Reflection;
+using System.Text.Json;
 
 namespace sa2_hunting_teacher;
 
@@ -7,6 +9,7 @@ public partial class HuntingTeacherForm : Form {
 	private readonly Settings settings;
 	private readonly UpdateManager updateManager;
 	private bool initializing = true;
+	public Dictionary<string, Dictionary<int, int[]>> Sets = [];
 
 	private static readonly Dictionary<MspHints, string> MspHintsSettings = new Dictionary<MspHints, string> {
 		{ sa2_hunting_teacher.MspHints.FIXED, "Fixed" },
@@ -31,6 +34,7 @@ public partial class HuntingTeacherForm : Form {
 
 		InitializeSettings();
 		InitializeTooltips();
+		InitializeSets();
 
 		this.initializing = false;
 
@@ -73,6 +77,31 @@ public partial class HuntingTeacherForm : Form {
 			"When enabled, you will play a set a 'repetition' number of times before proceeding to the next set\n" +
 			"When disabled, you will play a set once, proceed to the next set, then the sequence will repeat a 'repetition' number of times"
 		);
+	}
+
+	private void InitializeSets() {
+		var assembly = Assembly.GetExecutingAssembly();
+		using (Stream? stream = assembly.GetManifestResourceStream("sa2_hunting_teacher.Knuckles.KnucklesSets.json")) {
+			if (stream == null) {
+				throw new InvalidOperationException("Knuckles Sets resource not found.");
+			}
+
+			this.Sets = JsonSerializer.Deserialize<Dictionary<string, Dictionary<int, int[]>>>(stream)
+				?? throw new InvalidOperationException("KnucklesSets.json could not be parsed.");
+		}
+
+		using (Stream? stream = assembly.GetManifestResourceStream("sa2_hunting_teacher.Rouge.RougeSets.json")) {
+			if (stream == null) {
+				throw new InvalidOperationException("Rouge Sets resource not found.");
+			}
+
+			Dictionary<string, Dictionary<int, int[]>> RougeSets = JsonSerializer.Deserialize<Dictionary<string, Dictionary<int, int[]>>>(stream)
+				?? throw new InvalidOperationException("RougeSets.json could not be parsed.");
+
+			foreach (var level in RougeSets) {
+				this.Sets[level.Key] = level.Value;
+			}
+		}
 	}
 
 	private void SaveSettings() {
@@ -164,7 +193,7 @@ public partial class HuntingTeacherForm : Form {
 
 	private void setEditor_Click(object sender, EventArgs e) {
 		Level? previousLevel = this.levelSelector.SelectedValue as Level?;
-		SetEditor editorForm = new(this.settings);
+		SetEditor editorForm = new(this.settings, this.Sets);
 		editorForm.ShowDialog(this);
 		SupportedLevels.Configure(this.levelSelector, this.settings.CustomSequences, previousLevel);
 	}

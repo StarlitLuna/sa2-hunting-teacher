@@ -1,3 +1,6 @@
+using System.Reflection;
+using System.Text.Json;
+
 namespace sa2_hunting_teacher {
 	public partial class SetEditor : Form {
 		private enum Slot {
@@ -90,6 +93,7 @@ namespace sa2_hunting_teacher {
 			new(SetEditor.BuildSortedOptionCache);
 		private static readonly object[] NoneOnlyOptions = [SetEditor.None];
 		private const int AutoSaveDelayMs = 300;
+		private readonly Dictionary<string, Dictionary<int, int[]>> Sets;
 
 		private sealed class DataRowControls {
 			public required CustomSet Model { get; init; }
@@ -107,9 +111,10 @@ namespace sa2_hunting_teacher {
 		private bool suspendEvents;
 		private bool suspendSequenceSelection;
 
-		public SetEditor(Settings settings) {
+		public SetEditor(Settings settings, Dictionary<string, Dictionary<int, int[]>> sets) {
 			InitializeComponent();
 			this.settings = settings;
+			this.Sets = sets;
 			this.components ??= new System.ComponentModel.Container();
 			this.autoSaveTimer = new System.Windows.Forms.Timer(this.components) {
 				Interval = SetEditor.AutoSaveDelayMs
@@ -243,6 +248,27 @@ namespace sa2_hunting_teacher {
 			this.PersistIfValid(showErrors: true);
 		}
 
+		private void importSetsBtn_Click(object sender, EventArgs e) {
+			CustomSequence? current = this.Current();
+			bool hasContent = current != null && current.Sets.Any(s => !s.IsEmpty);
+			if (hasContent) {
+				DialogResult choice = MessageBox.Show(
+					this,
+					"Importing sets will clear all rows in this sequence. Continue?",
+					"Import Sets",
+					MessageBoxButtons.YesNo,
+					MessageBoxIcon.Warning
+				);
+
+				if (choice != DialogResult.Yes) {
+					return;
+				}
+			}
+
+			using SetImporter importer = new(this);
+			importer.ShowDialog(this);
+		}
+
 		private CustomSequence? Current() {
 			if (this.customSequences.SelectedIndices.Count != 1) {
 				return null;
@@ -255,6 +281,7 @@ namespace sa2_hunting_teacher {
 			CustomSequence? current = this.Current();
 			this.setEditorLevels.Enabled = current != null;
 			this.deleteSequence.Enabled = current != null;
+			this.importSetsBtn.Enabled = current != null;
 		}
 
 		private void SetSelectedSequence(int? index) {
@@ -896,6 +923,40 @@ namespace sa2_hunting_teacher {
 			});
 			this.CancelPendingAutoSave();
 			this.PersistIfValid(showErrors: false);
+		}
+
+		public void importSets(int[] sets, bool storyStyle) {
+			CustomSequence? current = this.Current();
+			if (current == null || !current.Level.HasValue) {
+				return;
+			}
+
+			LevelCatalog catalog = LevelCatalog.Get(current.Level.Value);
+			string levelId = "" + ((int)SupportedLevels.LevelToLevelId[current.Level.Value]);
+			if (storyStyle && this.Sets.ContainsKey(levelId + "-story")) {
+				levelId += "-story";
+			}
+
+			this.WithSuspendedRowLayout(() => {
+				current.Sets.Clear();
+				this.ClearDataRows();
+
+				foreach (int setId in sets) {
+					int[] pieces = this.Sets[levelId][setId];
+					CustomSet set = new() {
+						P1Id = pieces[0],
+						P2Id = pieces[1],
+						P3Id = pieces[2]
+					};
+
+					current.Sets.Add(set);
+					this.AddDataRow(set, catalog);
+				}
+
+				this.EnsureTrailingEmptyRow(current, catalog);
+			});
+
+			this.ScheduleAutoSave();
 		}
 	}
 }

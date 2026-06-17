@@ -74,7 +74,7 @@ public class PumpkinHill(SA2Manager manager, byte repetitions) : HuntingLevel(ma
 		{ Set.EnumKey(P1Id.TwinHuts), "Twin huts." },
 		{ Set.EnumKey(P1Id.DoubleContainersGhost), "Double containers. (Ghost train)" },
 		{ Set.EnumKey(P1Id.ForgottenHutChurch), "Forgotten hut. (Church)" },
-		{ Set.EnumKey(P1Id.ThreeMetalBarrels), "Three metal barrels." },
+		{ Set.EnumKey(P1Id.ThreeMetalBarrels), "Three metal barrels. (Church)" },
 		{ Set.EnumKey(P1Id.DoubleContainersChurch), "Double containers. (Church)" },
 		{ Set.EnumKey(P1Id.DoubleContainersPumpkin), "Double containers. (Pumpkin)" },
 		{ Set.EnumKey(P1Id.FarmHouse), "A farm house." },

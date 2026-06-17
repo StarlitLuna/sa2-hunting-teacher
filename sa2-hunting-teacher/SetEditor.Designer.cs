@@ -25,8 +25,11 @@ namespace sa2_hunting_teacher {
 		/// the contents of this method with the code editor.
 		/// </summary>
 		private void InitializeComponent() {
+			components = new System.ComponentModel.Container();
 			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SetEditor));
 			splitContainer1 = new SplitContainer();
+			setEditorSave = new Button();
+			importSetsBtn = new Button();
 			deleteSequence = new Button();
 			setEditorLevels = new GroupedComboBox();
 			addSequence = new Button();
@@ -36,7 +39,7 @@ namespace sa2_hunting_teacher {
 			p3Label = new Label();
 			p2Label = new Label();
 			p1Label = new Label();
-			setEditorSave = new Button();
+			importSetsTooltip = new ToolTip(components);
 			((System.ComponentModel.ISupportInitialize)splitContainer1).BeginInit();
 			splitContainer1.Panel1.SuspendLayout();
 			splitContainer1.Panel2.SuspendLayout();
@@ -58,6 +61,7 @@ namespace sa2_hunting_teacher {
 			// splitContainer1.Panel1
 			// 
 			splitContainer1.Panel1.Controls.Add(setEditorSave);
+			splitContainer1.Panel1.Controls.Add(importSetsBtn);
 			splitContainer1.Panel1.Controls.Add(deleteSequence);
 			splitContainer1.Panel1.Controls.Add(setEditorLevels);
 			splitContainer1.Panel1.Controls.Add(addSequence);
@@ -68,6 +72,29 @@ namespace sa2_hunting_teacher {
 			splitContainer1.Size = new Size(873, 519);
 			splitContainer1.SplitterDistance = 56;
 			splitContainer1.TabIndex = 0;
+			// 
+			// setEditorSave
+			// 
+			setEditorSave.Location = new Point(767, 13);
+			setEditorSave.Name = "setEditorSave";
+			setEditorSave.Size = new Size(94, 29);
+			setEditorSave.TabIndex = 4;
+			setEditorSave.Text = "Save";
+			setEditorSave.UseVisualStyleBackColor = true;
+			setEditorSave.Click += setEditorSave_Click;
+			// 
+			// importSetsBtn
+			// 
+			importSetsBtn.Cursor = Cursors.Help;
+			importSetsBtn.Enabled = false;
+			importSetsBtn.Location = new Point(649, 13);
+			importSetsBtn.Name = "importSetsBtn";
+			importSetsBtn.Size = new Size(112, 29);
+			importSetsBtn.TabIndex = 3;
+			importSetsBtn.Text = "Import Sets";
+			importSetsTooltip.SetToolTip(importSetsBtn, "Import sets to this sequence based on real 1024 set #s.\r\nImporting sets using this tool to this sequence will clear\r\nany custom sets you have already defined.");
+			importSetsBtn.UseVisualStyleBackColor = true;
+			importSetsBtn.Click += importSetsBtn_Click;
 			// 
 			// deleteSequence
 			// 
@@ -193,16 +220,6 @@ namespace sa2_hunting_teacher {
 			p1Label.Text = "Piece 1";
 			p1Label.TextAlign = ContentAlignment.MiddleCenter;
 			// 
-			// setEditorSave
-			// 
-			setEditorSave.Location = new Point(767, 13);
-			setEditorSave.Name = "setEditorSave";
-			setEditorSave.Size = new Size(94, 29);
-			setEditorSave.TabIndex = 3;
-			setEditorSave.Text = "Save";
-			setEditorSave.UseVisualStyleBackColor = true;
-			setEditorSave.Click += setEditorSave_Click;
-			// 
 			// SetEditor
 			// 
 			AutoScaleDimensions = new SizeF(8F, 20F);
@@ -244,5 +261,7 @@ namespace sa2_hunting_teacher {
 		private Label p2Label;
 		private GroupedComboBox setEditorLevels;
 		private Button setEditorSave;
+		private Button importSetsBtn;
+		private ToolTip importSetsTooltip;
 	}
 }
