@@ -320,7 +320,7 @@ public class SetEditorUiTests : IDisposable {
 	}
 
 	private static SetEditor BuildEditor(Settings settings) {
-		SetEditor editor = new(settings);
+		SetEditor editor = new(settings, []);
 		_ = editor.Handle;
 		_ = Reflect.GetField<ListView>(editor, "customSequences").Handle;
 		_ = Reflect.GetField<TableLayoutPanel>(editor, "tableLayoutPanel1").Handle;
