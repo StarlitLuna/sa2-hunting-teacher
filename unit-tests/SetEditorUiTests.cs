@@ -272,16 +272,15 @@ public class SetEditorUiTests : IDisposable {
 	[Fact]
 	public void ChangingPopulatedSequenceLevelThenChangingAgain_LeavesOneEmptyRowWithDropdowns() {
 		StaHelper.RunSta(() => {
-			using SetEditor editor = BuildEditorWithOneValidSequence();
+			using TestSetEditor editor = BuildEditorWithOneValidSequence(DialogResult.Yes);
 			editor.Show();
 			Application.DoEvents();
 			SelectSequence(editor, 0);
 			Application.DoEvents();
 			ComboBox levelSelector = Reflect.GetField<ComboBox>(editor, "setEditorLevels");
 
-			using System.Windows.Forms.Timer confirm = ConfirmNextDialogWithEnter();
 			SelectLevelByIndex(levelSelector, Level.WildCanyon);
-			confirm.Stop();
+			editor.AssertAllConfirmationsConsumed();
 			SelectLevelByIndex(levelSelector, Level.PumpkinHill);
 			Application.DoEvents();
 
@@ -371,7 +370,7 @@ public class SetEditorUiTests : IDisposable {
 		});
 	}
 
-	private static SetEditor BuildEditorWithOneValidSequence() {
+	private static TestSetEditor BuildEditorWithOneValidSequence(params DialogResult[] confirmations) {
 		LevelCatalog catalog = LevelCatalog.Get(Level.AquaticMine);
 		Settings settings = SettingsWithSequence(
 			new HuntingSequence {
@@ -388,11 +387,14 @@ public class SetEditorUiTests : IDisposable {
 			}
 		);
 
-		return BuildEditor(settings);
+		return BuildEditor(settings, confirmations);
 	}
 
-	private static SetEditor BuildEditor(Settings settings) {
-		SetEditor editor = new(settings, []);
+	private static TestSetEditor BuildEditor(Settings settings, params DialogResult[] confirmations) {
+		TestSetEditor editor = new(settings, []);
+		foreach (DialogResult confirmation in confirmations) {
+			editor.QueueConfirmation(confirmation);
+		}
 		_ = editor.Handle;
 		_ = Reflect.GetField<ListView>(editor, "customSequences").Handle;
 		_ = Reflect.GetField<TableLayoutPanel>(editor, "tableLayoutPanel1").Handle;
@@ -495,12 +497,23 @@ public class SetEditorUiTests : IDisposable {
 		throw new ArgumentException($"{level} is not present in the level selector.");
 	}
 
-	private static System.Windows.Forms.Timer ConfirmNextDialogWithEnter() {
-		System.Windows.Forms.Timer timer = new() {
-			Interval = 25
-		};
-		timer.Tick += (_, _) => SendKeys.SendWait("{ENTER}");
-		timer.Start();
-		return timer;
+	private sealed class TestSetEditor : SetEditor {
+		private readonly Queue<DialogResult> confirmations = new();
+
+		public TestSetEditor(Settings settings, Dictionary<string, Dictionary<int, int[]>> sets) : base(settings, sets) {
+		}
+
+		public void QueueConfirmation(DialogResult result) {
+			this.confirmations.Enqueue(result);
+		}
+
+		public void AssertAllConfirmationsConsumed() {
+			Assert.Empty(this.confirmations);
+		}
+
+		protected override DialogResult ConfirmDestructiveAction(string message, string caption) {
+			Assert.True(this.confirmations.TryDequeue(out DialogResult result), $"Unexpected confirmation dialog: {caption} - {message}");
+			return result;
+		}
 	}
 }
