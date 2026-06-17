@@ -248,16 +248,23 @@ namespace sa2_hunting_teacher {
 			this.PersistIfValid(showErrors: true);
 		}
 
+		protected virtual DialogResult ConfirmDestructiveAction(string message, string caption) {
+			return MessageBox.Show(
+				this,
+				message,
+				caption,
+				MessageBoxButtons.YesNo,
+				MessageBoxIcon.Warning
+			);
+		}
+
 		private void importSetsBtn_Click(object sender, EventArgs e) {
 			CustomSequence? current = this.Current();
 			bool hasContent = current != null && current.Sets.Any(s => !s.IsEmpty);
 			if (hasContent) {
-				DialogResult choice = MessageBox.Show(
-					this,
+				DialogResult choice = this.ConfirmDestructiveAction(
 					"Importing sets will clear all rows in this sequence. Continue?",
-					"Import Sets",
-					MessageBoxButtons.YesNo,
-					MessageBoxIcon.Warning
+					"Import Sets"
 				);
 
 				if (choice != DialogResult.Yes) {
@@ -341,12 +348,9 @@ namespace sa2_hunting_teacher {
 				return;
 			}
 
-			DialogResult choice = MessageBox.Show(
-				this,
+			DialogResult choice = this.ConfirmDestructiveAction(
 				$"Delete sequence \"{current.Name}\"?",
-				"Delete Sequence",
-				MessageBoxButtons.YesNo,
-				MessageBoxIcon.Warning
+				"Delete Sequence"
 			);
 			if (choice != DialogResult.Yes) {
 				return;
@@ -413,12 +417,9 @@ namespace sa2_hunting_teacher {
 
 			bool hasContent = current.Sets.Any(s => !s.IsEmpty);
 			if (hasContent) {
-				DialogResult choice = MessageBox.Show(
-					this,
+				DialogResult choice = this.ConfirmDestructiveAction(
 					"Changing the level will clear all rows in this sequence. Continue?",
-					"Change Level",
-					MessageBoxButtons.YesNo,
-					MessageBoxIcon.Warning
+					"Change Level"
 				);
 
 				if (choice != DialogResult.Yes) {
@@ -903,12 +904,9 @@ namespace sa2_hunting_teacher {
 
 			CustomSet model = row.Model;
 			if (!model.IsEmpty) {
-				DialogResult choice = MessageBox.Show(
-					this,
+				DialogResult choice = this.ConfirmDestructiveAction(
 					"Delete this row?",
-					"Delete Row",
-					MessageBoxButtons.YesNo,
-					MessageBoxIcon.Warning
+					"Delete Row"
 				);
 
 				if (choice != DialogResult.Yes) {
