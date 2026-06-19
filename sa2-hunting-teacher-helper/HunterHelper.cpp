@@ -25,6 +25,10 @@ void HunterHelper::Init() {
 	hLoadStageHintsFile.Hook(HunterHelper::EmeraldHintsFileLoaderInterceptor);
 	hLoadEmeraldLocations.Hook(HunterHelper::LoadEmeraldLocations);
 	hExitHandler.Hook(HunterHelper::ExitHandler);
+
+	constexpr uintptr_t StandardPaddingValues = 0xCCCCCCCCu;
+	uintptr_t debugModeHuntingRestartPtr = reinterpret_cast<uintptr_t>(DebugModeHuntingRestart);
+	HunterHelper::DebugModeSaveStatesDetected = debugModeHuntingRestartPtr && debugModeHuntingRestartPtr != StandardPaddingValues;
 }
 
 void HunterHelper::HookActiveWindow() {
@@ -268,7 +272,7 @@ void HunterHelper::LoadEmeraldLocations(EmeraldManager* emManager) {
 	if (CurrentLevel != HunterHelper::TeacherDataState->currentLevel) {
 		return hLoadEmeraldLocations.Original(emManager);
 	}
-
+	
 	// if resetting pieces, wait for teacher to send new ones
 	while (HunterHelper::TeacherDataState->inWinScreen || HunterHelper::TeacherDataState->levelLoading) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -280,6 +284,11 @@ void HunterHelper::LoadEmeraldLocations(EmeraldManager* emManager) {
 		HunterHelper::TeacherDataState->mspReversedHints != HunterHelper::HintsCurrentlyReversed
 	) {
 		HunterHelper::ApplyHintsFlip(HunterHelper::HintsBuffer);
+	}
+
+	// This is a save state, just ignore it.
+	if (HunterHelper::DebugModeSaveStatesDetected && *DebugModeHuntingRestart) {
+		return hLoadEmeraldLocations.Original(emManager);
 	}
 
 	Life_Count[0] = 99;

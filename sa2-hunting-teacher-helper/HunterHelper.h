@@ -35,6 +35,7 @@ DataPointer(char, TimerSecondsContinue, 0x1934B8D);
 DataPointer(char, TimerFramesContinue, 0x1934B8E);
 DataPointer(int, InGameFrameCount, 0x174B03C);
 DataPointer(char, StopTimer, 0x174AFDA);
+DataPointer(bool*, DebugModeHuntingRestart, 0x4548B2);
 
 static const uint8_t NEW_LINE = 0x0C;
 static const uint8_t CENTER_COMMAND = 0x07;
@@ -69,5 +70,6 @@ class HunterHelper {
 		static inline WNDPROC OldWndProc = nullptr;
 		static inline void* HintsBuffer = nullptr;
 		static inline bool HintsCurrentlyReversed = true;
+		static inline bool DebugModeSaveStatesDetected = false;
 };
 
