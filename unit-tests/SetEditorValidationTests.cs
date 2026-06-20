@@ -160,13 +160,15 @@ public class SetEditorValidationTests {
 	}
 
 	[Fact]
-	public void Validate_EnemyInP3Slot_IsValid() {
+	public void Validate_EnemyInP3Slot_ReportsInvalidForSlot() {
 		SetEditor editor = NewEditor();
 		LevelCatalog catalog = LevelCatalog.Get(Level.AquaticMine);
 		object seq = NewSequence("S", Level.AquaticMine, sets: [(catalog.P1.First(), catalog.P2.First(), catalog.Enemies.First())]);
 		SetSequences(editor, [seq]);
 
-		Assert.Empty(editor.ValidateSequences());
+		IReadOnlyList<string> errors = editor.ValidateSequences();
+
+		Assert.Contains(errors, e => e.Contains("Piece 3 has id"));
 	}
 
 	[Fact]

@@ -60,6 +60,7 @@ namespace sa2_hunting_teacher {
 			public required Action<CustomSet, int?> SetValue { get; init; }
 			public required Func<LevelCatalog, IReadOnlyList<int>> CatalogIds { get; init; }
 			public required Func<DataRowControls, ComboBox> Combo { get; init; }
+			public required bool AllowsEnemies { get; init; }
 		}
 
 		private static readonly NoneOption None = new();
@@ -70,7 +71,8 @@ namespace sa2_hunting_teacher {
 				GetValue = set => set.P1Id,
 				SetValue = (set, value) => set.P1Id = value,
 				CatalogIds = catalog => catalog.P1,
-				Combo = row => row.P1
+				Combo = row => row.P1,
+				AllowsEnemies = true
 			},
 			new() {
 				Slot = Slot.P2,
@@ -78,7 +80,8 @@ namespace sa2_hunting_teacher {
 				GetValue = set => set.P2Id,
 				SetValue = (set, value) => set.P2Id = value,
 				CatalogIds = catalog => catalog.P2,
-				Combo = row => row.P2
+				Combo = row => row.P2,
+				AllowsEnemies = true
 			},
 			new() {
 				Slot = Slot.P3,
@@ -86,7 +89,8 @@ namespace sa2_hunting_teacher {
 				GetValue = set => set.P3Id,
 				SetValue = (set, value) => set.P3Id = value,
 				CatalogIds = catalog => catalog.P3,
-				Combo = row => row.P3
+				Combo = row => row.P3,
+				AllowsEnemies = false
 			}
 		];
 		private static readonly Lazy<Dictionary<(LevelCatalog Catalog, Slot Slot), PieceOption[]>> SortedOptionCache =
@@ -747,8 +751,10 @@ namespace sa2_hunting_teacher {
 						pieces.Add(new PieceOption(id, catalog.HintFor(id)));
 					}
 
-					foreach (int id in catalog.Enemies) {
-						pieces.Add(new PieceOption(id, catalog.HintFor(id)));
+					if (slot.AllowsEnemies) {
+						foreach (int id in catalog.Enemies) {
+							pieces.Add(new PieceOption(id, catalog.HintFor(id)));
+						}
 					}
 
 					pieces.Sort((a, b) => string.Compare(a.Hint, b.Hint, StringComparison.InvariantCultureIgnoreCase));
@@ -869,7 +875,7 @@ namespace sa2_hunting_teacher {
 				}
 
 				if (!SetEditor.IsValidForSlot(catalog, slot, id.Value)) {
-					errors.Add($"{seqLabel} row {rowNum}: {slot.Label} has id 0x{id.Value:X4} which is not a valid {slot.Label} or Enemy id.");
+					errors.Add($"{seqLabel} row {rowNum}: {slot.Label} has id 0x{id.Value:X4} which is not a {SetEditor.ValidSlotDescription(slot)}.");
 				}
 			}
 
@@ -888,7 +894,13 @@ namespace sa2_hunting_teacher {
 		}
 
 		private static bool IsValidForSlot(LevelCatalog catalog, SlotDefinition slot, int id) {
-			return slot.CatalogIds(catalog).Contains(id) || SetEditor.IsEnemy(catalog, id);
+			return slot.CatalogIds(catalog).Contains(id) || (slot.AllowsEnemies && SetEditor.IsEnemy(catalog, id));
+		}
+
+		private static string ValidSlotDescription(SlotDefinition slot) {
+			return slot.AllowsEnemies
+				? $"valid {slot.Label} or Enemy id"
+				: $"valid {slot.Label} id";
 		}
 
 		private void OnRowDeleteClicked(DataRowControls row) {
