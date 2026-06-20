@@ -187,7 +187,7 @@ public class HuntingSetReferenceDataTests {
 		HashSet<int>[] allowedIdsByColumn = [
 			new HashSet<int>(catalog.P1.Concat(catalog.Enemies)),
 			new HashSet<int>(catalog.P2.Concat(catalog.Enemies)),
-			new HashSet<int>(catalog.P3.Concat(catalog.Enemies))
+			new HashSet<int>(catalog.P3)
 		];
 
 		Dictionary<string, int[]> expectedSets = new();

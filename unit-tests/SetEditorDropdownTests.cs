@@ -28,8 +28,10 @@ public class SetEditorDropdownTests {
 			foreach (object slot in Enum.GetValues(SlotType)) {
 				IReadOnlyList<int> ownIds = OwnIdsForSlot(catalog, slot);
 				HashSet<int> expectedIds = new(ownIds);
-				foreach (int id in catalog.Enemies) {
-					expectedIds.Add(id);
+				if (SlotAllowsEnemies(slot)) {
+					foreach (int id in catalog.Enemies) {
+						expectedIds.Add(id);
+					}
 				}
 
 				IList items = InvokeBuildOptions(catalog, slot, NewEmptySet());
@@ -93,6 +95,22 @@ public class SetEditorDropdownTests {
 	}
 
 	[Fact]
+	public void Dropdown_DoesNotIncludeEnemiesInP3() {
+		object slotP3 = Enum.Parse(SlotType, "P3");
+
+		foreach (Level level in Enum.GetValues<Level>()) {
+			LevelCatalog catalog = LevelCatalog.Get(level);
+			IList items = InvokeBuildOptions(catalog, slotP3, NewEmptySet());
+			HashSet<int> seenIds = new();
+			for (int i = 1; i < items.Count; i++) {
+				seenIds.Add((int)PieceOptionId.GetValue(items[i]!)!);
+			}
+
+			Assert.Empty(seenIds.Intersect(catalog.Enemies));
+		}
+	}
+
+	[Fact]
 	public void Dropdown_SiblingRefreshIsOnlyNeededWhenEnemyMembershipChanges() {
 		MethodInfo? method = SetEditorType.GetMethod(
 			"ShouldRefreshSiblingOptions",
@@ -119,6 +137,10 @@ public class SetEditorDropdownTests {
 			"P3" => catalog.P3,
 			_ => throw new ArgumentOutOfRangeException(nameof(slot))
 		};
+	}
+
+	private static bool SlotAllowsEnemies(object slot) {
+		return slot.ToString() != "P3";
 	}
 
 	private static IList InvokeBuildOptions(LevelCatalog catalog, object slot, object model) {
