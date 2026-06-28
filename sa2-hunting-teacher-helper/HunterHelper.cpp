@@ -26,9 +26,21 @@ void HunterHelper::Init() {
 	hLoadEmeraldLocations.Hook(HunterHelper::LoadEmeraldLocations);
 	hExitHandler.Hook(HunterHelper::ExitHandler);
 
-	constexpr uintptr_t StandardPaddingValues = 0xCCCCCCCCu;
-	uintptr_t debugModeHuntingRestartPtr = reinterpret_cast<uintptr_t>(DebugModeHuntingRestart);
-	HunterHelper::DebugModeSaveStatesDetected = debugModeHuntingRestartPtr && debugModeHuntingRestartPtr != StandardPaddingValues;
+	HunterHelper::InitDebugModeCompat();
+}
+
+void HunterHelper::InitDebugModeCompat() {
+	HMODULE debugMode = GetModuleHandleA("SA2-Debug-Mode.dll");
+	if (!debugMode) {
+		return;
+	}
+
+	DebugModeGetSaveApi getApi = reinterpret_cast<DebugModeGetSaveApi>(GetProcAddress(debugMode, "DebugMode_GetSaveApi"));
+	if (!getApi) {
+		return;
+	}
+
+	HunterHelper::SaveStates = getApi();
 }
 
 void HunterHelper::HookActiveWindow() {
@@ -287,7 +299,7 @@ void HunterHelper::LoadEmeraldLocations(EmeraldManager* emManager) {
 	}
 
 	// This is a save state, just ignore it.
-	if (HunterHelper::DebugModeSaveStatesDetected && *DebugModeHuntingRestart) {
+	if (HunterHelper::SaveStates && HunterHelper::SaveStates->HasPendingHuntingRestore()) {
 		return hLoadEmeraldLocations.Original(emManager);
 	}
 

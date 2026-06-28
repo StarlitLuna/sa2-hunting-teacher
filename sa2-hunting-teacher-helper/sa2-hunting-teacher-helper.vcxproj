@@ -101,6 +101,7 @@
     <ClInclude Include="SA2 Headers\ninja.h" />
     <ClInclude Include="SA2 Headers\SA2Enums.h" />
     <ClInclude Include="SA2 Headers\SA2Structs.h" />
+    <ClInclude Include="SA2 Headers\save-state-api.h" />
     <ClInclude Include="SA2 Headers\UsercallFunctionHandler.h" />
   </ItemGroup>
   <ItemGroup>

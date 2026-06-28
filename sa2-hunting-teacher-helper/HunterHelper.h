@@ -1,4 +1,5 @@
 #pragma once
+#include "save-state-api.h"
 
 #pragma pack(push, 1)
 struct HunterTeacherData {
@@ -35,7 +36,6 @@ DataPointer(char, TimerSecondsContinue, 0x1934B8D);
 DataPointer(char, TimerFramesContinue, 0x1934B8E);
 DataPointer(int, InGameFrameCount, 0x174B03C);
 DataPointer(char, StopTimer, 0x174AFDA);
-DataPointer(bool*, DebugModeHuntingRestart, 0x4548B2);
 
 static const uint8_t NEW_LINE = 0x0C;
 static const uint8_t CENTER_COMMAND = 0x07;
@@ -63,6 +63,7 @@ class HunterHelper {
 		static bool IsShiftJISCharacter(uint8_t leadByte, uint8_t trailByte);
 		static void ReverseShiftJISHint(uint8_t* hintStart, uint8_t* hintEnd);
 		static void ApplyHintsFlip(void* data);
+		static void InitDebugModeCompat();
 		static inline const int PIECE_COLLECTED = 254;
 		static inline const int MAX_HINT_SIZE = 8192;
 		static inline const int MAX_STR_LEN = 4096;
@@ -70,6 +71,6 @@ class HunterHelper {
 		static inline WNDPROC OldWndProc = nullptr;
 		static inline void* HintsBuffer = nullptr;
 		static inline bool HintsCurrentlyReversed = true;
-		static inline bool DebugModeSaveStatesDetected = false;
+		static inline const DebugModeSaveApi* SaveStates = nullptr;
 };
 

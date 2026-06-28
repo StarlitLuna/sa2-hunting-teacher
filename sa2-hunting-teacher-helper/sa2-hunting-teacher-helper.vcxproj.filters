@@ -45,6 +45,9 @@
     <ClInclude Include="SA2 Headers\FunctionHook.h">
       <Filter>Header Files\SA2 Headers</Filter>
     </ClInclude>
+    <ClInclude Include="SA2 Headers\save-state-api.h">
+      <Filter>Header Files\SA2 Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
